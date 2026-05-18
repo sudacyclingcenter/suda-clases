@@ -428,37 +428,63 @@ function onGoogleLogin(response) {
   var name    = payload.name;
   var picture = payload.picture;
 
-  // Verificar contra el Apps Script que el atleta está registrado
-  setScreen("screenProfile"); // Mostrar perfil mientras verifica
-  currentUser = {name:name, email:email, picture:picture};
-
-  document.getElementById("profileName").textContent  = name;
-  document.getElementById("profileEmail").textContent = email;
-  if(picture) {
-    var av = document.getElementById("profileAvatar");
-    av.innerHTML = '<img src="'+picture+'" class="avatar" alt="'+name+'">';
+  // Mostrar verificando
+  var loginSection = document.querySelector(".login-section");
+  if (loginSection) {
+    var verifyDiv = document.createElement("div");
+    verifyDiv.id = "verifyMsg";
+    verifyDiv.style.cssText = "text-align:center;padding:16px;color:var(--muted);font-size:13px;font-weight:600;margin-top:12px";
+    verifyDiv.textContent = "⏳ Verificando acceso...";
+    loginSection.appendChild(verifyDiv);
   }
 
-  // Cargar datos del atleta
-  loadUserSessions();
-  buildCalendar();
+  // Verificar si el atleta está registrado
+  fetch("https://script.google.com/macros/s/AKfycbyzaGGRg0iZt38QvRh6R967Hzcp0Bguo_4r15NmHv8Th8Au-QQ9Tb2sJri8cu87nOmgJg/exec?action=checkAthlete&email="+encodeURIComponent(email)+"&nombre="+encodeURIComponent(name))
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var vm = document.getElementById("verifyMsg");
+      if (vm) vm.remove();
+
+      if (data && data.autorizado === false) {
+        // No autorizado
+        var ls = document.querySelector(".login-section");
+        if (ls) {
+          ls.innerHTML += '<div style="background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);border-radius:12px;padding:20px;text-align:center;margin-top:16px">'+
+            '<div style="font-size:28px;margin-bottom:8px">🚫</div>'+
+            '<div style="font-family:Bebas Neue,cursive;font-size:22px;color:#E74C3C;margin-bottom:8px">ACCESO NO AUTORIZADO</div>'+
+            '<div style="font-size:13px;color:var(--muted);font-weight:600;line-height:1.7">El email <strong style="color:var(--text)">'+email+'</strong> no está registrado en Suda.<br>Contacta a tu entrenador para obtener acceso.</div>'+
+            '</div>';
+        }
+        google.accounts.id.disableAutoSelect();
+        return;
+      }
+
+      // Autorizado — continuar
+      currentUser = {name:name, email:email, picture:picture};
+      document.getElementById("profileName").textContent  = name;
+      document.getElementById("profileEmail").textContent = email;
+      if (picture) {
+        var av = document.getElementById("profileAvatar");
+        if (av) av.innerHTML = '<img src="'+picture+'" class="avatar" alt="'+name+'">';
+      }
+      setScreen("screenProfile");
+      loadUserSessions();
+      buildCalendar();
+    })
+    .catch(function() {
+      // Error de red — denegar acceso por seguridad
+      var vm = document.getElementById("verifyMsg");
+      if (vm) vm.remove();
+      var ls = document.querySelector(".login-section");
+      if (ls) {
+        ls.innerHTML += '<div style="background:rgba(230,166,0,.1);border:1px solid rgba(230,166,0,.3);border-radius:12px;padding:16px;text-align:center;margin-top:12px">'+
+          '<div style="font-size:13px;color:#E6A600;font-weight:700">⚠️ Error al verificar acceso. Intenta de nuevo.</div>'+
+          '</div>';
+      }
+      google.accounts.id.disableAutoSelect();
+    });
 }
 
-function parseJwt(token) {
-  var base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-  var json   = decodeURIComponent(atob(base64).split('').map(function(c){
-    return '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);
-  }).join(''));
-  return JSON.parse(json);
-}
-
-function logout() {
-  currentUser = null;
-  userSessions = [];
-  selectedDate = null;
-  google.accounts.id.disableAutoSelect();
-  setScreen("screenLogin");
-}
 
 // ════════════════════════════════════════════════════════════════════
 // CARGAR SESIONES DEL ATLETA
@@ -849,6 +875,14 @@ function suspendClass(fecha, bloque, id) {
 function setScreen(id) {
   document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
   document.getElementById(id).classList.add("active");
+}
+
+function logout() {
+  currentUser = null;
+  userSessions = [];
+  selectedDate = null;
+  google.accounts.id.disableAutoSelect();
+  window.location.href = "https://sudacyclingcenter.github.io/suda-clases";
 }
 
 function backToProfile() {
