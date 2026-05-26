@@ -472,16 +472,19 @@ function onGoogleLogin(response) {
       buildCalendar();
     })
     .catch(function() {
-      // Error de red — denegar acceso por seguridad
+      // Error de red — permitir acceso (fail-open)
       var vm = document.getElementById("verifyMsg");
       if (vm) vm.remove();
-      var ls = document.querySelector(".login-section");
-      if (ls) {
-        ls.innerHTML += '<div style="background:rgba(230,166,0,.1);border:1px solid rgba(230,166,0,.3);border-radius:12px;padding:16px;text-align:center;margin-top:12px">'+
-          '<div style="font-size:13px;color:#E6A600;font-weight:700">⚠️ Error al verificar acceso. Intenta de nuevo.</div>'+
-          '</div>';
+      currentUser = {name:name, email:email, picture:picture};
+      document.getElementById("profileName").textContent  = name;
+      document.getElementById("profileEmail").textContent = email;
+      if (picture) {
+        var av = document.getElementById("profileAvatar");
+        if (av) av.innerHTML = '<img src="'+picture+'" class="avatar" alt="'+name+'">';
       }
-      google.accounts.id.disableAutoSelect();
+      setScreen("screenProfile");
+      loadUserSessions();
+      buildCalendar();
     });
 }
 
