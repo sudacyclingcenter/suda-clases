@@ -232,6 +232,56 @@ footer{
 }
 .carrusel-dot.active { background: var(--orange); transform: scale(1.3); }
 
+
+/* ── COACH ── */
+.coach-section { }
+.coach-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 40px; display: flex;
+  gap: 40px; align-items: center; flex-wrap: wrap;
+}
+.coach-avatar {
+  width: 160px; height: 160px; border-radius: 50%;
+  border: 4px solid var(--orange); flex-shrink: 0;
+  background: linear-gradient(135deg,rgba(240,64,32,.2),rgba(26,31,92,.5));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 72px; margin: 0 auto;
+}
+.coach-info { flex: 1; min-width: 260px; }
+.coach-name { font-family:'Bebas Neue',cursive; font-size: 42px; letter-spacing: 2px; line-height: 1; margin-bottom: 6px; }
+.coach-title { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: var(--orange); text-transform: uppercase; margin-bottom: 18px; }
+.coach-bio { font-size: 14px; color: var(--muted); font-weight: 600; line-height: 1.9; margin-bottom: 20px; }
+.coach-certs { display: flex; flex-wrap: wrap; gap: 8px; }
+.coach-cert {
+  font-size: 11px; font-weight: 800; padding: 6px 12px; border-radius: 20px;
+  background: rgba(26,31,92,.5); color: rgba(245,240,235,.7);
+  border: 1px solid rgba(26,31,92,.8);
+}
+
+/* ── BLOG ── */
+.blog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 20px; }
+.blog-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px; transition: all .25s; cursor: pointer;
+}
+.blog-card:hover { transform: translateY(-4px); border-color: rgba(240,64,32,.3); }
+.blog-cat {
+  font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 12px;
+}
+.blog-title { font-family:'Bebas Neue',cursive; font-size: 20px; letter-spacing: 1px; margin-bottom: 8px; line-height: 1.2; }
+.blog-desc { font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.7; margin-bottom: 16px; }
+.blog-meta { font-size: 11px; color: var(--muted); font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.blog-link { color: var(--orange); text-decoration: none; font-weight: 800; font-size: 12px; }
+.blog-link:hover { text-decoration: underline; }
+.blog-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.blog-tab {
+  padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800;
+  cursor: pointer; border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-family: 'Nunito',sans-serif; transition: all .2s;
+}
+.blog-tab.active { background: var(--orange); color: white; border-color: var(--orange); }
+
 </style>
 </head>
 <body>
@@ -243,6 +293,8 @@ footer{
     <a href="#servicios">Servicios</a>
     <a href="#horarios">Horarios</a>
     <a href="#testimonios">Atletas</a>
+    <a href="#coach">Coach</a>
+    <a href="#blog">Blog</a>
     <a href="#ubicacion">Ubicación</a>
   </div>
   <a class="nav-cta" href="https://sudacyclingcenter.github.io/suda-clases/dashboard.html">Acceder →</a>
@@ -313,6 +365,18 @@ footer{
         <div class="service-desc">Reserva tus clases, ve tu historial, gestiona cancelaciones y recibe recordatorios automáticos desde tu teléfono.</div>
         <div class="service-badge">100% digital</div>
       </div>
+      <div class="service-card" style="border-color:rgba(240,64,32,.2);background:linear-gradient(135deg,var(--card),rgba(240,64,32,.04))">
+        <div class="service-icon">♀️</div>
+        <div class="service-name" style="color:var(--orange)">Entrenamiento para Mujeres</div>
+        <div class="service-desc">Trabajamos en base al ciclo menstrual de cada deportista con el fin de potenciar su rendimiento y adaptarnos a sus cambios hormonales y sensaciones. Así conseguimos mejores resultados y los objetivos de cada una, entrenando de forma inteligente en cada fase del ciclo.</div>
+        <div class="service-badge" style="background:rgba(240,64,32,.15);color:var(--orange)">Entrenamiento hormonal inteligente</div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">👥</div>
+        <div class="service-name">Entrenamiento en Dupla o Grupo</div>
+        <div class="service-desc">Entrena junto a un amigo, pareja o compañero de equipo con una planificación diseñada para ambos. Comparten el espacio, la motivación y los objetivos — sin perder la personalización que cada uno necesita.</div>
+        <div class="service-badge">Desde 2 personas</div>
+      </div>
     </div>
   </div>
 </section>
@@ -348,7 +412,7 @@ footer{
       <div class="schedule-card" style="background:rgba(240,64,32,.05);border-color:rgba(240,64,32,.2)">
         <div class="schedule-day" style="color:var(--text)">¿Cómo reservar?</div>
         <div style="font-size:13px;color:var(--muted);font-weight:600;line-height:1.9;margin-bottom:16px">
-          <div style="padding:6px 0;border-bottom:1px solid var(--border)">1. Accede con tu Gmail</div>
+          <div style="padding:6px 0;border-bottom:1px solid var(--border)">1. Ingresa con tu usuario y contraseña</div>
           <div style="padding:6px 0;border-bottom:1px solid var(--border)">2. Elige el día en el calendario</div>
           <div style="padding:6px 0;border-bottom:1px solid var(--border)">3. Selecciona tu bloque horario</div>
           <div style="padding:6px 0">4. Confirma tu asistencia ✓</div>
@@ -501,6 +565,85 @@ footer{
   </div>
 </section>
 
+
+<!-- COACH -->
+<section id="coach" style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="section-inner">
+    <div class="section-tag">Tu entrenador</div>
+    <div class="section-title">Conoce al<br>Coach</div>
+    <div class="coach-card">
+      <img src="https://sudacyclingcenter.github.io/suda-clases/coach.jpg" alt="Benjamín Aros" style="width:160px;height:160px;border-radius:50%;border:4px solid var(--orange);object-fit:cover;flex-shrink:0;display:block;margin:0 auto;box-shadow:0 8px 32px rgba(240,64,32,.3)">
+      <div class="coach-info">
+        <div class="coach-name">Benjamín Aros Marzá</div>
+        <div class="coach-title">Preparador Físico · Entrenador de Ciclismo UCI L1 y L2 · Fundador de Suda Cycling Center</div>
+        <div class="coach-bio">
+          Técnico Superior en Preparación Física (Duoc UC) y Entrenador de Ciclismo UCI Nivel 1 y 2 
+          certificado en Aigle, Suiza. Con más de 7 años de experiencia trabajando con ciclistas 
+          amateurs y de alto rendimiento, desde seleccionados nacionales hasta deportistas que buscan 
+          su mejor versión.
+          <br><br>
+          Ha trabajado en programas de alto rendimiento con ciclistas de pista y ruta, 
+          incluyendo seleccionados nacionales y equipos de élite. Fundador de Suda Cycling Center 
+          en 2024, donde aplica su metodología de entrenamiento personalizado — basada en datos 
+          reales y tecnología de vanguardia — a deportistas de todos los niveles que buscan 
+          mejorar su rendimiento.
+          <br><br>
+          Su filosofía: <em style="color:var(--orange)">"El entrenamiento inteligente y personalizado 
+          es la única forma de conseguir resultados sostenibles."</em>
+        </div>
+        <div class="coach-certs">
+          <span class="coach-cert">🎓 Preparador Físico Duoc UC</span>
+          <span class="coach-cert">🚴 Entrenador UCI L1 y L2</span>
+          <span class="coach-cert">🔧 Mecánico UCI L1</span>
+          <span class="coach-cert">📊 TrainingPeaks</span>
+          <span class="coach-cert">⚡ Vitruve · Encoder</span>
+          <span class="coach-cert">🏆 Alto Rendimiento</span>
+          <span class="coach-cert">♀️ Entrenamiento Femenino</span>
+          <span class="coach-cert">🇨🇭 Certificado en Suiza</span>
+        </div>
+        <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap">
+          <a href="https://www.linkedin.com/in/benjamin-eduardo-a-marza/" target="_blank"
+             style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;
+                    color:rgba(245,240,235,.6);text-decoration:none;border:1px solid var(--border);
+                    padding:6px 14px;border-radius:20px;transition:all .2s"
+             onmouseover="this.style.borderColor='var(--orange)';this.style.color='var(--orange)'"
+             onmouseout="this.style.borderColor='var(--border)';this.style.color='rgba(245,240,235,.6)'">
+            💼 LinkedIn
+          </a>
+          <a href="https://www.instagram.com/tipejoencleta/" target="_blank"
+             style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;
+                    color:rgba(245,240,235,.6);text-decoration:none;border:1px solid var(--border);
+                    padding:6px 14px;border-radius:20px;transition:all .2s"
+             onmouseover="this.style.borderColor='var(--orange)';this.style.color='var(--orange)'"
+             onmouseout="this.style.borderColor='var(--border)';this.style.color='rgba(245,240,235,.6)'">
+            📷 Instagram
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- BLOG / PAPERS -->
+<section id="blog">
+  <div class="section-inner">
+    <div class="section-tag">Información deportiva</div>
+    <div class="section-title">Blog &<br>Recursos</div>
+    <div class="section-sub">Papers de investigación, artículos y recursos deportivos para que te informes y entrenes con base científica.</div>
+
+    <div style="text-align:center;padding:60px 20px;background:var(--card);border:1px solid var(--border);border-radius:16px">
+      <div style="font-size:52px;margin-bottom:16px">🔬</div>
+      <div style="font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:2px;color:var(--orange);margin-bottom:10px">PRÓXIMA INICIACIÓN</div>
+      <div style="font-size:14px;color:var(--muted);font-weight:600;line-height:1.8;max-width:400px;margin:0 auto">
+        Estamos preparando contenido de calidad con papers, investigaciones y artículos deportivos para que entrenes con base científica.<br><br>
+        ¡Muy pronto disponible!
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA DASHBOARD -->
 <section style="padding:80px 24px">
   <div class="cta-section">
@@ -520,6 +663,8 @@ footer{
     <a href="#servicios">Servicios</a>
     <a href="#horarios">Horarios</a>
     <a href="#testimonios">Atletas</a>
+    <a href="#coach">Coach</a>
+    <a href="#blog">Blog</a>
     <a href="#ubicacion">Ubicación</a>
     <a href="https://sudacyclingcenter.github.io/suda-clases/dashboard.html">Dashboard</a>
     <a href="https://www.instagram.com/sudacyclingcenter/" target="_blank">📷 Instagram</a>
@@ -564,6 +709,23 @@ function goToSlide(idx) {
 }
 
 document.addEventListener('DOMContentLoaded', initCarrusel);
+</script>
+
+
+<script>
+function filterBlog(cat) {
+  // Update tabs
+  document.querySelectorAll('.blog-tab').forEach(function(t) { t.classList.remove('active'); });
+  event.target.classList.add('active');
+  // Filter cards
+  document.querySelectorAll('.blog-card').forEach(function(c) {
+    if (cat === 'todos' || c.dataset.cat === cat) {
+      c.style.display = 'block';
+    } else {
+      c.style.display = 'none';
+    }
+  });
+}
 </script>
 
 </body>
