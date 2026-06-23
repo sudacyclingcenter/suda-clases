@@ -216,9 +216,79 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
   50%      { transform: translateY(-10px); }
 }
 
+
+/* ── LOADING OVERLAY (CAFÉ) ── */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(10,12,26,.95);
+  z-index: 9999; display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.loading-overlay.show { display: flex; }
+.coffee-cup {
+  width: 100px; height: 110px; position: relative; margin-bottom: 30px;
+}
+.cup-body {
+  position: absolute; bottom: 0; left: 10px; width: 70px; height: 80px;
+  border: 4px solid var(--orange); border-radius: 0 0 16px 16px;
+  overflow: hidden; background: rgba(245,240,235,.05);
+}
+.coffee-fill {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 0%;
+  background: linear-gradient(180deg, #C8763C, #6F4423);
+  transition: height .3s ease; border-radius: 0 0 12px 12px;
+}
+.coffee-fill::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+  background: #E8A56A; opacity: .8;
+}
+.cup-handle {
+  position: absolute; right: 2px; top: 28px; width: 24px; height: 32px;
+  border: 4px solid var(--orange); border-left: none; border-radius: 0 16px 16px 0;
+}
+.cup-steam {
+  position: absolute; top: 0; width: 4px; height: 18px;
+  background: linear-gradient(0deg, transparent, rgba(245,240,235,.4));
+  border-radius: 2px; animation: steam 1.5s ease-in-out infinite;
+}
+.cup-steam:nth-child(1) { left: 24px; animation-delay: 0s; }
+.cup-steam:nth-child(2) { left: 40px; animation-delay: .4s; }
+.cup-steam:nth-child(3) { left: 56px; animation-delay: .8s; }
+@keyframes steam {
+  0%,100% { opacity: 0; transform: translateY(4px); }
+  50%     { opacity: 1; transform: translateY(-6px); }
+}
+.loading-text {
+  font-family: 'Bebas Neue',cursive; font-size: 26px; letter-spacing: 2px;
+  color: var(--orange); margin-bottom: 8px;
+}
+.loading-pct {
+  font-size: 14px; color: var(--muted); font-weight: 700;
+}
+.loading-sub {
+  font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 12px;
+  max-width: 240px; text-align: center; line-height: 1.5;
+}
+
 </style>
 </head>
 <body>
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="coffee-cup">
+    <div class="cup-steam"></div>
+    <div class="cup-steam"></div>
+    <div class="cup-steam"></div>
+    <div class="cup-body">
+      <div class="coffee-fill" id="coffeeFill"></div>
+    </div>
+    <div class="cup-handle"></div>
+  </div>
+  <div class="loading-text" id="loadingText">PREPARANDO...</div>
+  <div class="loading-pct" id="loadingPct">0%</div>
+  <div class="loading-sub">Estamos guardando tu información, espera un momento ☕</div>
+</div>
+
+
 
 <!-- FLOATING IMGS -->
 <img src="https://sudacyclingcenter.github.io/suda-clases/STICKET%20PESA%202%40300x.png" alt="" style="position:fixed;top:5%;left:3%;width:85px;opacity:.05;transform:rotate(-10deg);z-index:0;pointer-events:none;animation:floatAnim 6s ease-in-out infinite 0s;">
@@ -514,10 +584,16 @@ function handleLogin() {
         currentUser = {
           name:    data.nombre || user,
           email:   data.email  || user,
-          usuario: user
+          usuario: user,
+          avatarUrl: data.avatarUrl || ""
         };
         document.getElementById("profileName").textContent  = currentUser.name;
         document.getElementById("profileEmail").textContent = currentUser.email;
+        // Aplicar foto de perfil si existe
+        if (currentUser.avatarUrl) {
+          var av = document.getElementById("profileAvatar");
+          if (av) av.innerHTML = '<img src="'+currentUser.avatarUrl+'" class="avatar" alt="foto">';
+        }
         document.getElementById("loginError").style.display = "none";
         setScreen("screenProfile");
         loadUserSessions();
@@ -748,10 +824,19 @@ function handleConfirm(){
   if(!block){shake("inputBlock");return;}
   if(!selectedDate||!currentUser)return;
   var fecha=selectedDate.getFullYear()+"-"+String(selectedDate.getMonth()+1).padStart(2,"0")+"-"+String(selectedDate.getDate()).padStart(2,"0");
+
+  // Validar 4 horas de anticipación
+  if(!validarTiempoAnticipacion(fecha, block)){
+    alert("⏰ Las clases deben agendarse con al menos 4 horas de anticipación. Por favor elige un horario más adelante.");
+    return;
+  }
+
+  showLoading("CONFIRMANDO...");
   var fd=new FormData();
   fd.append("payload",JSON.stringify({nombre:currentUser.name,email:currentUser.email,bloque:block,fecha_entreno:fecha,estado:"Confirmado",observacion:""}));
   fetch(APPS_URL,{method:"POST",body:fd,mode:"no-cors"})
     .then(function(){
+      hideLoading(function(){
       userSessions.push({nombre:currentUser.name,bloque:block,fecha:fecha,estado:"Confirmado",id:Date.now().toString()});
       var DN=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
       var d=selectedDate;
@@ -763,21 +848,36 @@ function handleConfirm(){
         {k:"Registrado",v:new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})}
       ].map(function(r){return '<div class="detail-row"><span class="detail-key">'+r.k+'</span><span>'+r.v+'</span></div>';}).join("");
       setScreen("screenSuccess");showToast();renderProfile();buildCalendar();
-    }).catch(function(){alert("Error al registrar. Intenta de nuevo.");});
+      });
+    }).catch(function(){hideLoading(function(){alert("Error al registrar. Intenta de nuevo.");});});
 }
 
 // ── SUSPENDER ──────────────────────────────────────────────────────────
 function suspendClass(fecha,bloque,id){
   if(!confirm("¿Suspender clase del "+fecha+" a las "+bloque+" hrs?"))return;
+
+  // Validar que falten al menos 2 horas (suspensión)
+  var partesFecha = fecha.split("-");
+  var partesHora  = bloque.split(":");
+  var fechaClase = new Date(parseInt(partesFecha[0]),parseInt(partesFecha[1])-1,parseInt(partesFecha[2]),parseInt(partesHora[0]),parseInt(partesHora[1]),0);
+  var diffHoras = (fechaClase - new Date())/(1000*60*60);
+  if(diffHoras < 2){
+    alert("⏰ Solo puedes suspender una clase hasta 2 horas antes. Para una emergencia, escríbele directamente a Benjamín.");
+    return;
+  }
+
+  showLoading("SUSPENDIENDO...");
   var fd=new FormData();
   fd.append("payload",JSON.stringify({nombre:currentUser.name,email:currentUser.email,bloque:bloque,fecha_entreno:fecha,estado:"Cancelado",observacion:"Suspendido por atleta"}));
   fetch(APPS_URL,{method:"POST",body:fd,mode:"no-cors"})
     .then(function(){
-      userSessions=userSessions.map(function(s){if(s.fecha===fecha&&s.bloque===bloque)return Object.assign({},s,{estado:"Cancelado"});return s;});
-      renderProfile();buildCalendar();setScreen("screenCancelled");
-      var secs=5;
-      var iv=setInterval(function(){secs--;var el=document.getElementById("cancelCountdown");if(el)el.textContent="Volviendo en "+secs+" segundo"+(secs!==1?"s":"")+"...";if(secs<=0){clearInterval(iv);backToProfile();}},1000);
-    }).catch(function(){alert("Error al suspender. Intenta de nuevo.");});
+      hideLoading(function(){
+        userSessions=userSessions.map(function(s){if(s.fecha===fecha&&s.bloque===bloque)return Object.assign({},s,{estado:"Cancelado"});return s;});
+        renderProfile();buildCalendar();setScreen("screenCancelled");
+        var secs=5;
+        var iv=setInterval(function(){secs--;var el=document.getElementById("cancelCountdown");if(el)el.textContent="Volviendo en "+secs+" segundo"+(secs!==1?"s":"")+"...";if(secs<=0){clearInterval(iv);backToProfile();}},1000);
+      });
+    }).catch(function(){hideLoading(function(){alert("Error al suspender. Intenta de nuevo.");});});
 }
 
 // ── NAVEGACIÓN ──────────────────────────────────────────────────────────
@@ -883,31 +983,50 @@ function guardarPerfil() {
   var passActual = document.getElementById('editPassActual').value.trim();
   var passNueva  = document.getElementById('editPassNueva').value.trim();
   var passConf   = document.getElementById('editPassConfirm').value.trim();
-  var result     = document.getElementById('editResult');
 
   if (!usuario) {
-    showEditResult('error', '⚠️ El usuario no puede estar vacío.');
+    showEditResult('error', 'El usuario no puede estar vacío.');
     return;
   }
   if (passNueva && passNueva !== passConf) {
-    showEditResult('error', '⚠️ Las contraseñas nuevas no coinciden.');
+    showEditResult('error', 'Las contraseñas nuevas no coinciden.');
     return;
   }
   if (passNueva && !passActual) {
-    showEditResult('error', '⚠️ Ingresa tu contraseña actual para cambiarla.');
+    showEditResult('error', 'Ingresa tu contraseña actual para cambiarla.');
     return;
   }
 
-  // Update local user
-  currentUser.usuario = usuario;
-  if (passNueva) currentUser.passTemp = passNueva;
+  showLoading("GUARDANDO...");
 
-  // Update profile display
-  document.getElementById('profileName').textContent  = currentUser.name;
-  document.getElementById('sideUserName').textContent = currentUser.name;
+  // Enviar al Apps Script para persistir en Sheets
+  var fd = new FormData();
+  fd.append("payload", JSON.stringify({
+    action: "updateProfile",
+    nombreActual: currentUser.name,
+    usuarioNuevo: usuario,
+    passActual: passActual,
+    passNueva: passNueva,
+    avatarUrl: currentUser.avatarUrl || ""
+  }));
 
-  showEditResult('success', '✅ ¡Perfil actualizado correctamente!');
-  setTimeout(function() { backToProfile(); }, 1500);
+  fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
+    .then(function() {
+      hideLoading(function() {
+        // Update local user
+        currentUser.usuario = usuario;
+        if (passNueva) currentUser.passTemp = passNueva;
+        document.getElementById('profileName').textContent  = currentUser.name;
+        document.getElementById('sideUserName').textContent = currentUser.name;
+        showEditResult('success', '¡Perfil actualizado correctamente!');
+        setTimeout(function() { backToProfile(); }, 1500);
+      });
+    })
+    .catch(function() {
+      hideLoading(function() {
+        showEditResult('error', 'Error al guardar. Intenta de nuevo.');
+      });
+    });
 }
 
 function showEditResult(type, msg) {
@@ -923,6 +1042,57 @@ function showEditResult(type, msg) {
     result.style.color = '#2ECC71';
   }
   result.textContent = msg;
+}
+
+
+// ── COFFEE LOADING ───────────────────────────────────────────────────────
+var loadingInterval = null;
+function showLoading(text) {
+  var overlay = document.getElementById('loadingOverlay');
+  var fill    = document.getElementById('coffeeFill');
+  var pct     = document.getElementById('loadingPct');
+  var txt     = document.getElementById('loadingText');
+  if (txt) txt.textContent = text || 'PREPARANDO...';
+  overlay.classList.add('show');
+  var progress = 0;
+  fill.style.height = '0%';
+  if (pct) pct.textContent = '0%';
+  loadingInterval = setInterval(function() {
+    // Advance toward 90% gradually, leave last 10% for completion
+    if (progress < 90) {
+      progress += Math.random() * 8 + 2;
+      if (progress > 90) progress = 90;
+      fill.style.height = progress + '%';
+      if (pct) pct.textContent = Math.round(progress) + '%';
+    }
+  }, 250);
+}
+function hideLoading(callback) {
+  var fill = document.getElementById('coffeeFill');
+  var pct  = document.getElementById('loadingPct');
+  var overlay = document.getElementById('loadingOverlay');
+  if (loadingInterval) clearInterval(loadingInterval);
+  // Complete to 100%
+  fill.style.height = '100%';
+  if (pct) pct.textContent = '100%';
+  setTimeout(function() {
+    overlay.classList.remove('show');
+    if (callback) callback();
+  }, 600);
+}
+
+// ── VALIDACIÓN 4 HORAS DE ANTICIPACIÓN ──────────────────────────────────
+function validarTiempoAnticipacion(fecha, bloque) {
+  // fecha: "YYYY-MM-DD", bloque: "HH:MM"
+  var partesFecha = fecha.split("-");
+  var partesHora  = bloque.split(":");
+  var fechaClase = new Date(
+    parseInt(partesFecha[0]), parseInt(partesFecha[1])-1, parseInt(partesFecha[2]),
+    parseInt(partesHora[0]), parseInt(partesHora[1]), 0
+  );
+  var ahora = new Date();
+  var diffHoras = (fechaClase - ahora) / (1000 * 60 * 60);
+  return diffHoras >= 4;  // Debe ser al menos 4 horas antes
 }
 
 </script>
