@@ -965,15 +965,31 @@ function previewAvatar(input) {
   if (!input.files || !input.files[0]) return;
   var reader = new FileReader();
   reader.onload = function(e) {
-    var upload = document.getElementById('avatarUpload');
-    upload.innerHTML = '<img src="'+e.target.result+'" alt="avatar" style="width:100%;height:100%;object-fit:cover"><div class="avatar-upload-overlay">📷</div>';
-    upload.onclick = function() { document.getElementById('avatarInput').click(); };
-    if (currentUser) currentUser.avatarUrl = e.target.result;
-    // Update profile avatar too
-    var av = document.getElementById('profileAvatar');
-    if (av) av.innerHTML = '<img src="'+e.target.result+'" class="avatar" alt="foto">';
-    var sideAv = document.getElementById('sideAvatar');
-    if (sideAv) sideAv.innerHTML = '<img src="'+e.target.result+'" alt="avatar" style="width:100%;height:100%;object-fit:cover">';
+    // Comprimir imagen a 120x120px para que quepa en Google Sheets
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var size = 120;
+      canvas.width = size;
+      canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      // Recortar cuadrado centrado
+      var min = Math.min(img.width, img.height);
+      var sx = (img.width - min) / 2;
+      var sy = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+      var compressed = canvas.toDataURL('image/jpeg', 0.6);
+
+      var upload = document.getElementById('avatarUpload');
+      upload.innerHTML = '<img src="'+compressed+'" alt="avatar" style="width:100%;height:100%;object-fit:cover"><div class="avatar-upload-overlay">📷</div>';
+      upload.onclick = function() { document.getElementById('avatarInput').click(); };
+      if (currentUser) currentUser.avatarUrl = compressed;
+      var av = document.getElementById('profileAvatar');
+      if (av) av.innerHTML = '<img src="'+compressed+'" class="avatar" alt="foto">';
+      var sideAv2 = document.getElementById('sideAvatar');
+      if (sideAv2) sideAv2.innerHTML = '<img src="'+compressed+'" alt="avatar" style="width:100%;height:100%;object-fit:cover">';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(input.files[0]);
 }
