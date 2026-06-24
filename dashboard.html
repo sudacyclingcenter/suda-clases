@@ -217,44 +217,31 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
 }
 
 
-/* ── LOADING OVERLAY (CAFÉ) ── */
+/* ── LOADING OVERLAY ── */
 .loading-overlay {
   position: fixed; inset: 0; background: rgba(10,12,26,.95);
   z-index: 9999; display: none; flex-direction: column;
   align-items: center; justify-content: center;
 }
 .loading-overlay.show { display: flex; }
-.coffee-cup {
-  width: 100px; height: 110px; position: relative; margin-bottom: 30px;
+.cafe-loading-img {
+  width: 120px; height: auto; margin-bottom: 24px;
+  animation: cafeFloat 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(240,64,32,.3));
 }
-.cup-body {
-  position: absolute; bottom: 0; left: 10px; width: 70px; height: 80px;
-  border: 4px solid var(--orange); border-radius: 0 0 16px 16px;
-  overflow: hidden; background: rgba(245,240,235,.05);
+@keyframes cafeFloat {
+  0%,100% { transform: translateY(0) rotate(-3deg); }
+  50%     { transform: translateY(-14px) rotate(3deg); }
 }
-.coffee-fill {
-  position: absolute; bottom: 0; left: 0; right: 0; height: 0%;
-  background: linear-gradient(180deg, #C8763C, #6F4423);
-  transition: height .3s ease; border-radius: 0 0 12px 12px;
+.progress-track {
+  width: 220px; height: 10px; background: rgba(245,240,235,.1);
+  border-radius: 20px; overflow: hidden; margin-bottom: 10px;
 }
-.coffee-fill::after {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-  background: #E8A56A; opacity: .8;
+.progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #F04020, #FF6B4A);
+  border-radius: 20px; transition: width .3s ease;
 }
-.cup-handle {
-  position: absolute; right: 2px; top: 28px; width: 24px; height: 32px;
-  border: 4px solid var(--orange); border-left: none; border-radius: 0 16px 16px 0;
-}
-.cup-steam {
-  position: absolute; top: 0; width: 4px; height: 18px;
-  background: linear-gradient(0deg, transparent, rgba(245,240,235,.4));
-  border-radius: 2px; animation: steam 1.5s ease-in-out infinite;
-}
-.cup-steam:nth-child(1) { left: 24px; animation-delay: 0s; }
-.cup-steam:nth-child(2) { left: 40px; animation-delay: .4s; }
-.cup-steam:nth-child(3) { left: 56px; animation-delay: .8s; }
-@keyframes steam {
-  0%,100% { opacity: 0; transform: translateY(4px); }
   50%     { opacity: 1; transform: translateY(-6px); }
 }
 .loading-text {
@@ -274,18 +261,13 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
 <body>
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loadingOverlay">
-  <div class="coffee-cup">
-    <div class="cup-steam"></div>
-    <div class="cup-steam"></div>
-    <div class="cup-steam"></div>
-    <div class="cup-body">
-      <div class="coffee-fill" id="coffeeFill"></div>
-    </div>
-    <div class="cup-handle"></div>
-  </div>
+  <img src="https://sudacyclingcenter.github.io/suda-clases/STICKET%20CAFE%203%40300x.png" alt="Cargando" class="cafe-loading-img">
   <div class="loading-text" id="loadingText">PREPARANDO...</div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
   <div class="loading-pct" id="loadingPct">0%</div>
-  <div class="loading-sub">Estamos guardando tu información, espera un momento ☕</div>
+  <div class="loading-sub">Estamos guardando tu información, espera un momento</div>
 </div>
 
 
@@ -490,14 +472,6 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
       <button onclick="backToProfile()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0">←</button>
       <div class="card-title" style="margin:0">Editar mi perfil</div>
     </div>
-
-    <!-- Avatar -->
-    <div class="avatar-upload" onclick="document.getElementById('avatarInput').click()" id="avatarUpload">
-      <span id="avatarEmoji">🏋️</span>
-      <div class="avatar-upload-overlay">📷</div>
-    </div>
-    <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="previewAvatar(this)">
-    <p style="text-align:center;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:20px">Toca para cambiar tu foto</p>
 
     <div class="edit-field">
       <label class="edit-label">Usuario</label>
@@ -948,16 +922,6 @@ function openEditProfile() {
   document.getElementById('editPassNueva').value = '';
   document.getElementById('editPassConfirm').value = '';
   document.getElementById('editResult').style.display = 'none';
-
-  // Load current avatar
-  var upload = document.getElementById('avatarUpload');
-  var emoji  = document.getElementById('avatarEmoji');
-  if (currentUser.avatarUrl) {
-    upload.innerHTML = '<img src="'+currentUser.avatarUrl+'" alt="avatar" style="width:100%;height:100%;object-fit:cover"><div class="avatar-upload-overlay">📷</div>';
-  } else {
-    if (emoji) emoji.textContent = currentUser.avatarEmoji || '🏋️';
-  }
-
   setScreen('screenEditProfile');
 }
 
@@ -1023,7 +987,7 @@ function guardarPerfil() {
     usuarioNuevo: usuario,
     passActual: passActual,
     passNueva: passNueva,
-    avatarUrl: currentUser.avatarUrl || ""
+    avatarUrl: ""
   }));
 
   fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
@@ -1065,31 +1029,31 @@ function showEditResult(type, msg) {
 var loadingInterval = null;
 function showLoading(text) {
   var overlay = document.getElementById('loadingOverlay');
-  var fill    = document.getElementById('coffeeFill');
+  var fill    = document.getElementById('progressFill');
   var pct     = document.getElementById('loadingPct');
   var txt     = document.getElementById('loadingText');
   if (txt) txt.textContent = text || 'PREPARANDO...';
   overlay.classList.add('show');
   var progress = 0;
-  fill.style.height = '0%';
+  fill.style.width = '0%';
   if (pct) pct.textContent = '0%';
   loadingInterval = setInterval(function() {
     // Advance toward 90% gradually, leave last 10% for completion
     if (progress < 90) {
       progress += Math.random() * 8 + 2;
       if (progress > 90) progress = 90;
-      fill.style.height = progress + '%';
+      fill.style.width = progress + '%';
       if (pct) pct.textContent = Math.round(progress) + '%';
     }
   }, 250);
 }
 function hideLoading(callback) {
-  var fill = document.getElementById('coffeeFill');
+  var fill = document.getElementById('progressFill');
   var pct  = document.getElementById('loadingPct');
   var overlay = document.getElementById('loadingOverlay');
   if (loadingInterval) clearInterval(loadingInterval);
   // Complete to 100%
-  fill.style.height = '100%';
+  fill.style.width = '100%';
   if (pct) pct.textContent = '100%';
   setTimeout(function() {
     overlay.classList.remove('show');
