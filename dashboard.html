@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Suda Cycling Center — Mis Clases</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -317,6 +320,9 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
     <button class="side-item" id="menuPerfil" onclick="sideNav('perfil')">
       <span class="side-item-icon">✏️</span> Editar mi perfil
     </button>
+    <button class="side-item" id="menuAyuda" onclick="sideNav('ayuda')">
+      <span class="side-item-icon">❓</span> ¿Cómo funciona?
+    </button>
   </div>
   <div class="side-footer">
     <button class="side-logout" onclick="logout()">
@@ -492,6 +498,110 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
     <div id="editResult" style="display:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;text-align:center;margin-bottom:14px"></div>
     <button class="btn btn-primary" onclick="guardarPerfil()">Guardar cambios</button>
     <button class="btn-back" onclick="backToProfile()" style="margin-top:8px">Cancelar</button>
+  </div>
+</div>
+
+
+<!-- AYUDA / TUTORIAL -->
+<div class="screen" id="screenAyuda">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <button onclick="backToProfile()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0">←</button>
+      <div class="card-title" style="margin:0">¿Cómo funciona?</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--muted);font-weight:600;line-height:1.7;margin-bottom:24px">
+      Aquí te explicamos todo lo que puedes hacer en tu perfil y los puntos importantes que debes saber.
+    </p>
+
+    <!-- PASO 1 -->
+    <div style="display:flex;gap:14px;margin-bottom:20px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:20px;flex-shrink:0">1</div>
+      <div>
+        <div style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:.5px;margin-bottom:4px">Agendar una clase</div>
+        <div style="font-size:13px;color:var(--muted);font-weight:600;line-height:1.7">
+          En la pestaña <strong style="color:var(--text)">Agendar</strong>, elige el día en el calendario, selecciona tu bloque horario y confirma. ¡Listo! Recibirás un correo de confirmación.
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 2 -->
+    <div style="display:flex;gap:14px;margin-bottom:20px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:20px;flex-shrink:0">2</div>
+      <div>
+        <div style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:.5px;margin-bottom:4px">Ver tu historial</div>
+        <div style="font-size:13px;color:var(--muted);font-weight:600;line-height:1.7">
+          En la pestaña <strong style="color:var(--text)">Historial</strong> puedes ver todas tus clases pasadas y futuras, con su estado (confirmada o suspendida).
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 3 -->
+    <div style="display:flex;gap:14px;margin-bottom:20px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:20px;flex-shrink:0">3</div>
+      <div>
+        <div style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:.5px;margin-bottom:4px">Suspender una clase</div>
+        <div style="font-size:13px;color:var(--muted);font-weight:600;line-height:1.7">
+          En la pestaña <strong style="color:var(--text)">Suspender</strong> puedes cancelar una clase futura que ya tengas confirmada. El cupo quedará libre para otra persona.
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 4 -->
+    <div style="display:flex;gap:14px;margin-bottom:24px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:20px;flex-shrink:0">4</div>
+      <div>
+        <div style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:.5px;margin-bottom:4px">Editar tu perfil</div>
+        <div style="font-size:13px;color:var(--muted);font-weight:600;line-height:1.7">
+          En <strong style="color:var(--text)">Editar mi perfil</strong> puedes cambiar tu usuario y contraseña cuando quieras.
+        </div>
+      </div>
+    </div>
+
+    <!-- LÍMITES IMPORTANTES -->
+    <div style="background:rgba(240,64,32,.08);border:1px solid rgba(240,64,32,.25);border-radius:12px;padding:18px;margin-bottom:14px">
+      <div style="font-family:'Bebas Neue',cursive;font-size:18px;color:var(--orange);letter-spacing:1px;margin-bottom:12px">⚠️ Importante: ten en cuenta</div>
+
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <span style="font-size:18px;flex-shrink:0">⏰</span>
+        <div style="font-size:13px;color:var(--text);font-weight:600;line-height:1.6">
+          <strong>Para agendar:</strong> debes hacerlo con al menos <strong style="color:var(--orange)">4 horas de anticipación</strong> antes de la hora de la clase.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <span style="font-size:18px;flex-shrink:0">🚫</span>
+        <div style="font-size:13px;color:var(--text);font-weight:600;line-height:1.6">
+          <strong>Para suspender:</strong> puedes cancelar hasta <strong style="color:var(--orange)">2 horas antes</strong> de la clase. Después de ese tiempo ya no se puede desde la app.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <span style="font-size:18px;flex-shrink:0">📅</span>
+        <div style="font-size:13px;color:var(--text);font-weight:600;line-height:1.6">
+          <strong>Días disponibles:</strong> de lunes a viernes. Los fines de semana y feriados están bloqueados.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <span style="font-size:18px;flex-shrink:0">👥</span>
+        <div style="font-size:13px;color:var(--text);font-weight:600;line-height:1.6">
+          <strong>Cupos por bloque:</strong> máximo 6 personas. Si un bloque está lleno, elige otro horario.
+        </div>
+      </div>
+    </div>
+
+    <!-- EMERGENCIA -->
+    <div style="background:rgba(230,166,0,.08);border:1px solid rgba(230,166,0,.25);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;gap:10px">
+        <span style="font-size:18px;flex-shrink:0">📞</span>
+        <div style="font-size:13px;color:var(--text);font-weight:600;line-height:1.6">
+          <strong>¿Emergencia de último minuto?</strong> Si no puedes suspender a tiempo desde la app, escríbele directamente a Benjamín para avisarle.
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="backToProfile()">Entendido, ¡a entrenar! 💪</button>
   </div>
 </div>
 
@@ -911,6 +1021,9 @@ function sideNav(section) {
   } else if (section === 'perfil') {
     document.getElementById('menuPerfil').classList.add('active');
     openEditProfile();
+  } else if (section === 'ayuda') {
+    document.getElementById('menuAyuda').classList.add('active');
+    setScreen('screenAyuda');
   }
 }
 
