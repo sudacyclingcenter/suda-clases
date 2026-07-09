@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Evaluación Inicial — Suda Cycling Center</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jaro&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -95,6 +97,17 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
   .hero{background:white;border-bottom:2px solid #F04020}
   .card,.section-block{border:1px solid #ccc;break-inside:avoid}
 }
+
+.mov-modal-overlay{position:fixed;inset:0;background:rgba(10,12,26,.92);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.mov-modal-overlay.show{display:flex}
+.mov-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:360px;width:100%;padding:20px;position:relative}
+.mov-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);font-size:26px;cursor:pointer;line-height:1}
+.mov-modal-title{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:.5px;color:var(--orange);margin-bottom:12px;padding-right:30px}
+.mov-modal svg{width:100%;height:auto;background:var(--surface);border-radius:12px;padding:10px}
+.mov-modal-cue{font-size:12px;color:var(--muted);font-weight:600;line-height:1.6;margin-top:12px}
+.ver-como-btn{background:rgba(240,64,32,.1);border:1px solid rgba(240,64,32,.3);color:var(--orange);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;transition:all .2s;white-space:nowrap;margin-top:6px}
+.ver-como-btn:hover{background:rgba(240,64,32,.2)}
+
 </style>
 </head>
 <body>
@@ -336,15 +349,15 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
 // CONFIG
 // ══════════════════════════════════════════════════════════════════════
 var MASTER_PASS = "suda2024";  // Cambia esto por tu contraseña
-var APPS_URL = "REEMPLAZA_CON_TU_APPS_SCRIPT_URL";
+var APPS_URL = "https://script.google.com/macros/s/AKfycbwa3pQvUXg4Hf2e6ILLb3inNFp7ym3MT7lD6Rr_pfNl0JsdppeX8WhpRTdYzrdcpmjpxg/exec";
 
 var MOVEMENTS = [
-  {id:"m1", name:"Sentadilla aérea (overhead squat)", alert:"Valgo rodilla, talones se levantan, tronco inclinado, asimetría"},
-  {id:"m2", name:"Dorsiflexión de tobillo (rodilla a pared)", alert:"Diferencia >1-2cm entre lados; rodilla no toca a 10cm"},
-  {id:"m3", name:"Rotación torácica sentado", alert:"Rotación limitada/dolorosa; asimetría marcada"},
-  {id:"m4", name:"Apley scratch test (hombro)", alert:"Dolor; diferencia >10cm entre manos; asimetría"},
-  {id:"m5", name:"Bisagra de cadera con bastón", alert:"Pérdida contacto bastón; flexión lumbar compensatoria"},
-  {id:"m6", name:"Equilibrio monopodal (10-15s)", alert:"Pérdida antes de 10s; asimetría entre piernas"}
+  {id:"m1", name:"Sentadilla aérea (overhead squat)", alert:"Valgo rodilla, talones se levantan, tronco inclinado, asimetría", cue:"De pie, pies al ancho de hombros, bastón o barra sobre la cabeza con brazos extendidos. Baja en sentadilla manteniendo los brazos arriba y los talones en el suelo.", svg:"<svg viewBox=\"0 0 200 240\" xmlns=\"http://www.w3.org/2000/svg\">\n<style>.b{stroke:#F04020;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.j{fill:#F5F0EB}.bar{stroke:#F5F0EB;stroke-width:5;stroke-linecap:round}</style>\n<!-- barra overhead -->\n<line class=\"bar\" x1=\"55\" y1=\"35\" x2=\"145\" y2=\"35\"/>\n<circle class=\"j\" cx=\"55\" cy=\"35\" r=\"6\"/><circle class=\"j\" cx=\"145\" cy=\"35\" r=\"6\"/>\n<!-- cabeza -->\n<circle class=\"j\" cx=\"100\" cy=\"70\" r=\"12\"/>\n<!-- brazos arriba -->\n<path class=\"b\" d=\"M100 82 L78 55 M100 82 L122 55 M78 55 L60 38 M122 55 L140 38\"/>\n<!-- torso -->\n<line class=\"b\" x1=\"100\" y1=\"82\" x2=\"100\" y2=\"140\"/>\n<!-- piernas en sentadilla -->\n<path class=\"b\" d=\"M100 140 L75 165 L80 200 M100 140 L125 165 L120 200\"/>\n<!-- pies -->\n<path class=\"b\" d=\"M80 200 L68 200 M120 200 L132 200\"/>\n<text x=\"100\" y=\"228\" fill=\"#6B7094\" font-family=\"Arial\" font-size=\"11\" text-anchor=\"middle\" font-weight=\"bold\">Barra/bast\u00f3n sobre la cabeza</text>\n</svg>"},
+  {id:"m2", name:"Dorsiflexión de tobillo (rodilla a pared)", alert:"Diferencia >1-2cm entre lados; rodilla no toca a 10cm", cue:"Pie a unos 10cm de la pared, talón firme en el suelo. Lleva la rodilla hacia la pared sin levantar el talón. Compara ambos lados.", svg:"<svg viewBox=\"0 0 200 240\" xmlns=\"http://www.w3.org/2000/svg\">\n<style>.b{stroke:#F04020;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.j{fill:#F5F0EB}.wall{stroke:#6B7094;stroke-width:4}.m{stroke:#E6A600;stroke-width:2;stroke-dasharray:4 3}</style>\n<!-- pared -->\n<line class=\"wall\" x1=\"150\" y1=\"30\" x2=\"150\" y2=\"210\"/>\n<rect x=\"150\" y=\"30\" width=\"14\" height=\"180\" fill=\"#232645\"/>\n<!-- pie en el suelo -->\n<line class=\"b\" x1=\"70\" y1=\"200\" x2=\"130\" y2=\"200\"/>\n<!-- espinilla inclinada hacia la pared -->\n<line class=\"b\" x1=\"105\" y1=\"200\" x2=\"135\" y2=\"150\"/>\n<!-- muslo -->\n<line class=\"b\" x1=\"135\" y1=\"150\" x2=\"110\" y2=\"110\"/>\n<!-- rodilla apunta a la pared -->\n<circle class=\"j\" cx=\"135\" cy=\"150\" r=\"6\"/>\n<!-- medici\u00f3n rodilla-pared -->\n<line class=\"m\" x1=\"135\" y1=\"150\" x2=\"150\" y2=\"150\"/>\n<text x=\"60\" y=\"150\" fill=\"#E6A600\" font-family=\"Arial\" font-size=\"10\" text-anchor=\"middle\" font-weight=\"bold\">Rodilla toca</text>\n<text x=\"60\" y=\"163\" fill=\"#E6A600\" font-family=\"Arial\" font-size=\"10\" text-anchor=\"middle\" font-weight=\"bold\">la pared</text>\n<text x=\"100\" y=\"228\" fill=\"#6B7094\" font-family=\"Arial\" font-size=\"11\" text-anchor=\"middle\" font-weight=\"bold\">Tal\u00f3n en el suelo \u00b7 rodilla a pared</text>\n</svg>"},
+  {id:"m3", name:"Rotación torácica sentado", alert:"Rotación limitada/dolorosa; asimetría marcada", cue:"Sentado, brazos cruzados sobre el pecho. Rota el tronco hacia un lado y luego al otro, manteniendo la cadera fija.", svg:"<svg viewBox=\"0 0 200 240\" xmlns=\"http://www.w3.org/2000/svg\">\n<style>.b{stroke:#F04020;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.j{fill:#F5F0EB}.rot{stroke:#E6A600;stroke-width:2.5;fill:none;stroke-linecap:round}</style>\n<!-- cabeza -->\n<circle class=\"j\" cx=\"100\" cy=\"45\" r=\"12\"/>\n<!-- torso -->\n<line class=\"b\" x1=\"100\" y1=\"57\" x2=\"100\" y2=\"130\"/>\n<!-- brazos cruzados al pecho -->\n<path class=\"b\" d=\"M100 75 L75 90 M100 75 L125 90\"/>\n<!-- sentado - piernas -->\n<path class=\"b\" d=\"M100 130 L70 130 L70 160 M100 130 L130 130 L130 160\"/>\n<!-- flecha rotaci\u00f3n -->\n<path class=\"rot\" d=\"M65 45 A40 40 0 0 1 135 45\"/>\n<path class=\"rot\" d=\"M135 45 L128 38 M135 45 L128 52\"/>\n<text x=\"100\" y=\"228\" fill=\"#6B7094\" font-family=\"Arial\" font-size=\"11\" text-anchor=\"middle\" font-weight=\"bold\">Sentado \u00b7 rota el tronco a cada lado</text>\n</svg>"},
+  {id:"m4", name:"Apley scratch test (hombro)", alert:"Dolor; diferencia >10cm entre manos; asimetría", cue:"Lleva una mano por encima del hombro hacia la espalda, y la otra por debajo hacia arriba. Intenta que las manos se acerquen o toquen. Compara ambos lados.", svg:"<svg viewBox=\"0 0 200 240\" xmlns=\"http://www.w3.org/2000/svg\">\n<style>.b{stroke:#F04020;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.j{fill:#F5F0EB}</style>\n<!-- cabeza -->\n<circle class=\"j\" cx=\"100\" cy=\"45\" r=\"12\"/>\n<!-- torso -->\n<line class=\"b\" x1=\"100\" y1=\"57\" x2=\"100\" y2=\"150\"/>\n<!-- brazo arriba por detr\u00e1s (una mano sube) -->\n<path class=\"b\" d=\"M100 75 L120 60 L118 90 L108 105\"/>\n<!-- brazo abajo por detr\u00e1s (otra mano sube) -->\n<path class=\"b\" d=\"M100 100 L80 120 L88 100 L98 92\"/>\n<!-- manos que intentan tocarse -->\n<circle class=\"j\" cx=\"108\" cy=\"105\" r=\"5\"/>\n<circle class=\"j\" cx=\"98\" cy=\"92\" r=\"5\"/>\n<!-- piernas -->\n<path class=\"b\" d=\"M100 150 L85 195 M100 150 L115 195\"/>\n<text x=\"100\" y=\"228\" fill=\"#6B7094\" font-family=\"Arial\" font-size=\"10\" text-anchor=\"middle\" font-weight=\"bold\">Una mano por arriba, otra por abajo</text>\n</svg>"},
+  {id:"m5", name:"Bisagra de cadera con bastón", alert:"Pérdida contacto bastón; flexión lumbar compensatoria", cue:"Bastón en la espalda tocando cabeza, zona dorsal y sacro. Inclina el tronco hacia adelante llevando la cadera atrás, sin perder los 3 puntos de contacto.", svg:"<svg viewBox=\"0 0 200 240\" xmlns=\"http://www.w3.org/2000/svg\">\n<style>.b{stroke:#F04020;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.j{fill:#F5F0EB}.stick{stroke:#F5F0EB;stroke-width:4;stroke-linecap:round}.pt{fill:#E6A600}</style>\n<!-- bast\u00f3n en la espalda (3 puntos de contacto) -->\n<line class=\"stick\" x1=\"55\" y1=\"55\" x2=\"120\" y2=\"150\"/>\n<!-- puntos de contacto: cabeza, dorsal, sacro -->\n<circle class=\"pt\" cx=\"62\" cy=\"65\" r=\"4\"/>\n<circle class=\"pt\" cx=\"88\" cy=\"103\" r=\"4\"/>\n<circle class=\"pt\" cx=\"112\" cy=\"140\" r=\"4\"/>\n<!-- cabeza -->\n<circle class=\"j\" cx=\"55\" cy=\"55\" r=\"11\"/>\n<!-- torso inclinado (bisagra) -->\n<line class=\"b\" x1=\"62\" y1=\"65\" x2=\"120\" y2=\"150\"/>\n<!-- piernas casi rectas -->\n<line class=\"b\" x1=\"120\" y1=\"150\" x2=\"125\" y2=\"205\"/>\n<!-- brazos colgando -->\n<line class=\"b\" x1=\"90\" y1=\"107\" x2=\"105\" y2=\"140\"/>\n<text x=\"100\" y=\"226\" fill=\"#6B7094\" font-family=\"Arial\" font-size=\"10\" text-anchor=\"middle\" font-weight=\"bold\">Bast\u00f3n toca cabeza, espalda y sacro</text>\n</svg>"},
+  {id:"m6", name:"Equilibrio monopodal (10-15s)", alert:"Pérdida antes de 10s; asimetría entre piernas", cue:"De pie sobre una sola pierna, la otra flexionada. Mantén el equilibrio 10-15 segundos. Compara ambas piernas.", svg:"<svg viewBox=\"0 0 200 240\" xmlns=\"http://www.w3.org/2000/svg\">\n<style>.b{stroke:#F04020;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.j{fill:#F5F0EB}.ground{stroke:#6B7094;stroke-width:3}</style>\n<!-- suelo -->\n<line class=\"ground\" x1=\"50\" y1=\"205\" x2=\"150\" y2=\"205\"/>\n<!-- cabeza -->\n<circle class=\"j\" cx=\"100\" cy=\"50\" r=\"12\"/>\n<!-- torso -->\n<line class=\"b\" x1=\"100\" y1=\"62\" x2=\"100\" y2=\"130\"/>\n<!-- brazos equilibrio -->\n<path class=\"b\" d=\"M100 80 L72 92 M100 80 L128 92\"/>\n<!-- pierna de apoyo -->\n<line class=\"b\" x1=\"100\" y1=\"130\" x2=\"100\" y2=\"205\"/>\n<!-- pierna levantada (flexionada) -->\n<path class=\"b\" d=\"M100 130 L122 150 L108 172\"/>\n<!-- pie de apoyo -->\n<line class=\"b\" x1=\"88\" y1=\"205\" x2=\"112\" y2=\"205\"/>\n<text x=\"100\" y=\"228\" fill=\"#6B7094\" font-family=\"Arial\" font-size=\"11\" text-anchor=\"middle\" font-weight=\"bold\">Sobre una pierna \u00b7 10-15 segundos</text>\n</svg>"}
 ];
 
 var PERFILES = [
@@ -418,13 +431,26 @@ function nuevaEvaluacion() {
 function renderMovements() {
   var html = "";
   MOVEMENTS.forEach(function(m){
-    html += '<div class="movement-row"><div><div class="movement-name">'+m.name+'</div><div class="movement-alert">⚠ '+m.alert+'</div></div>'
+    html += '<div class="movement-row"><div><div class="movement-name">'+m.name+'</div><div class="movement-alert">⚠ '+m.alert+'</div>'
+      + '<button class="ver-como-btn" onclick="verComo(\''+m.id+'\')">👁 Ver cómo</button></div>'
       + '<div class="toggle-group">'
       + '<div class="toggle-btn normal" onclick="setMovement(\''+m.id+'\',\'Normal\',this)">Normal</div>'
       + '<div class="toggle-btn alterado" onclick="setMovement(\''+m.id+'\',\'Alterado\',this)">Alterado</div>'
       + '</div></div>';
   });
   document.getElementById("movementTests").innerHTML = html;
+}
+
+function verComo(id) {
+  var m = MOVEMENTS.find(function(x){return x.id===id;});
+  if(!m) return;
+  document.getElementById("movModalTitle").textContent = m.name;
+  document.getElementById("movModalSvg").innerHTML = m.svg;
+  document.getElementById("movModalCue").textContent = m.cue;
+  document.getElementById("movModal").classList.add("show");
+}
+function cerrarMovModal() {
+  document.getElementById("movModal").classList.remove("show");
 }
 function setMovement(id, val, el) {
   evalData["mov_"+id] = val;
@@ -747,5 +773,16 @@ window.addEventListener("DOMContentLoaded", function(){
   }
 });
 </script>
+
+<!-- MODAL ILUSTRACIÓN MOVIMIENTO -->
+<div class="mov-modal-overlay" id="movModal" onclick="if(event.target===this)cerrarMovModal()">
+  <div class="mov-modal">
+    <button class="mov-modal-close" onclick="cerrarMovModal()">×</button>
+    <div class="mov-modal-title" id="movModalTitle"></div>
+    <div id="movModalSvg"></div>
+    <div class="mov-modal-cue" id="movModalCue"></div>
+  </div>
+</div>
+
 </body>
 </html>
