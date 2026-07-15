@@ -674,6 +674,7 @@ function handleLogin() {
   var btn = document.querySelector("#screenLogin .btn-primary");
   btn.textContent = "VERIFICANDO...";
   btn.disabled = true;
+  showLoading("INGRESANDO...");
 
   fetch(APPS_URL + "?action=checkAthlete&usuario=" + encodeURIComponent(user) + "&password=" + encodeURIComponent(pass))
     .then(function(r) { return r.json(); })
@@ -696,20 +697,25 @@ function handleLogin() {
           if (av) av.innerHTML = '<img src="'+currentUser.avatarUrl+'" class="avatar" alt="foto">';
         }
         document.getElementById("loginError").style.display = "none";
-        setScreen("screenProfile");
-        loadUserSessions();
-        buildCalendar();
+        loadUserSessions(function(){
+          hideLoading(function(){
+            setScreen("screenProfile");
+          });
+        });
       } else {
-        document.getElementById("loginError").style.display = "block";
-        shake("inputPass");
+        hideLoading(function(){
+          document.getElementById("loginError").style.display = "block";
+          shake("inputPass");
+        });
       }
     })
     .catch(function() {
       btn.textContent = "INGRESAR";
       btn.disabled = false;
-      // Error de red — mostrar opciones
-      document.getElementById("loginError").textContent = "⚠️ Error de conexión. Intenta de nuevo.";
-      document.getElementById("loginError").style.display = "block";
+      hideLoading(function(){
+        document.getElementById("loginError").textContent = "⚠️ Error de conexión. Intenta de nuevo.";
+        document.getElementById("loginError").style.display = "block";
+      });
     });
 }
 
@@ -728,18 +734,22 @@ function logout() {
 }
 
 // ── CARGAR SESIONES ────────────────────────────────────────────────────
-function loadUserSessions() {
-  if (!currentUser) return;
+function loadUserSessions(callback) {
+  if (!currentUser) { if (callback) callback(); return; }
   fetch(APPS_URL + "?action=getSessions&nombre=" + encodeURIComponent(currentUser.name))
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data && data.sessions) {
         userSessions = data.sessions;
-        renderProfile();
-        buildCalendar();
       }
+      renderProfile();
+      buildCalendar();
+      if (callback) callback();
     })
-    .catch(function() { renderProfile(); });
+    .catch(function() {
+      renderProfile();
+      if (callback) callback();
+    });
 }
 
 function formatBloque(b) {
@@ -910,10 +920,21 @@ function fetchCupos(){
   var block=document.getElementById("inputBlock").value;
   if(!block||!selectedDate)return;
   var fechaStr=selectedDate.getFullYear()+"-"+String(selectedDate.getMonth()+1).padStart(2,"0")+"-"+String(selectedDate.getDate()).padStart(2,"0");
+  showLoading("VERIFICANDO CUPOS...");
   fetch(APPS_URL+"?bloque="+encodeURIComponent(block)+"&fecha="+encodeURIComponent(fechaStr))
     .then(function(r){return r.json();})
-    .then(function(data){renderSlots(data.ocupados||0,data.alumnos||[]);updateBadge(data.libres!=null?data.libres:6);})
-    .catch(function(){renderSlots(0,[]);updateBadge(6);});
+    .then(function(data){
+      hideLoading(function(){
+        renderSlots(data.ocupados||0,data.alumnos||[]);
+        updateBadge(data.libres!=null?data.libres:6);
+      });
+    })
+    .catch(function(){
+      hideLoading(function(){
+        renderSlots(0,[]);
+        updateBadge(6);
+      });
+    });
 }
 document.getElementById("inputBlock").addEventListener("change",fetchCupos);
 
