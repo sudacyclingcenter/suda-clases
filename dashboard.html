@@ -11,7 +11,8 @@
 <style>
 :root{--orange:#F04020;--navy:#1A1F5C;--cream:#F5F0EB;--black:#0A0C1A;--card:#12152A;--surface:#0D1020;--border:#232645;--text:#F5F0EB;--muted:#6B7094;--radius:14px}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh}
+body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;overscroll-behavior-y:none}
+html{overscroll-behavior-y:none;background:var(--black)}
 .hero{background:linear-gradient(160deg,#0A0C1A,#12152A);padding:28px 24px 22px;text-align:center;border-bottom:2px solid var(--orange)}
 .hero-logo{width:160px;max-width:60%;margin:0 auto 8px;display:block;filter:drop-shadow(0 4px 16px rgba(240,64,32,.35))}
 .hero-tagline{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
@@ -45,6 +46,9 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
 .next-label{font-size:10px;font-weight:800;letter-spacing:2px;color:var(--orange);text-transform:uppercase;margin-bottom:6px}
 .next-time{font-family:'Bebas Neue',cursive;font-size:36px;color:var(--text);line-height:1}
 .next-date{font-size:13px;color:var(--muted);font-weight:600;margin-top:2px}
+.session-limit-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.session-limit-track{width:100%;height:8px;background:rgba(245,240,235,.08);border-radius:20px;overflow:hidden}
+.session-limit-fill{height:100%;border-radius:20px;transition:width .4s ease,background .4s ease}
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center}
 .stat-num{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--orange);line-height:1}
@@ -108,6 +112,10 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
 
 /* TOAST */
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--orange);color:white;padding:16px 22px;border-radius:14px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;text-align:center;max-width:320px;width:90%;box-shadow:0 8px 32px rgba(240,64,32,.45);transition:transform 0.5s cubic-bezier(.175,.885,.32,1.275);z-index:9999;line-height:1.6}
+.alert-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-140px);max-width:340px;width:88%;padding:16px 18px;border-radius:14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;text-align:center;line-height:1.6;box-shadow:0 8px 32px rgba(0,0,0,.4);transition:transform 0.45s cubic-bezier(.175,.885,.32,1.275);z-index:10000;pointer-events:none}
+.alert-toast.show{transform:translateX(-50%) translateY(0)}
+.alert-toast.warning{background:#2A2110;border:1px solid rgba(230,166,0,.5);color:#F5F0EB}
+.alert-toast.error{background:#2A1414;border:1px solid rgba(231,76,60,.5);color:#F5F0EB}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* FOOTER */
@@ -376,6 +384,13 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
       <div class="next-label" style="color:var(--muted)">Sin clases agendadas</div>
       <div style="font-size:13px;color:var(--muted);font-weight:600;margin-top:4px">Agenda tu próxima clase abajo 👇</div>
     </div>
+    <div class="session-limit-box" id="sessionLimitBox" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+        <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Sesiones este mes</div>
+        <div style="font-size:13px;font-weight:800" id="sessionLimitText">0 de 0</div>
+      </div>
+      <div class="session-limit-track"><div class="session-limit-fill" id="sessionLimitFill" style="width:0%"></div></div>
+    </div>
     <div class="stats-grid">
       <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Este mes</div></div>
       <div class="stat-box"><div class="stat-num" id="statConfirmed" style="color:#4CAF82">0</div><div class="stat-label">Confirmadas</div></div>
@@ -439,7 +454,7 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
         </select>
       </div>
       <div style="margin-bottom:14px">
-        <div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Ocupación del bloque</div>
+        <div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Bloques ocupados</div>
         <div class="slots-grid" id="slotsGrid">
           <div class="slot free">LIBRE</div><div class="slot free">LIBRE</div>
           <div class="slot free">LIBRE</div><div class="slot free">LIBRE</div>
@@ -635,13 +650,14 @@ body{background:var(--black);font-family:'Nunito',sans-serif;color:var(--text);m
 </div>
 
 <div class="toast" id="toast">Recuerda traer tu botella, una toalla y ganas para sufrir 💪🏽 🔥</div>
+<div class="alert-toast" id="alertToast"></div>
 
 <script>
 var APPS_URL = "https://script.google.com/macros/s/AKfycbyzaGGRg0iZt38QvRh6R967Hzcp0Bguo_4r15NmHv8Th8Au-QQ9Tb2sJri8cu87nOmgJg/exec";
 var LANDING  = "https://sudacyclingcenter.github.io/suda-clases";
 
 var FERIADOS = {"05-21":1,"06-20":1,"06-29":1,"07-16":1,"08-15":1,"09-18":1,"09-19":1,"10-12":1,"10-31":1,"11-01":1,"11-15":1,"12-08":1,"12-25":1,"01-01":1,"04-18":1,"04-19":1,"05-01":1};
-var DIAS_EXTRA = {"2026-07-20":1,"2026-08-17":1,"2026-10-09":1};
+var DIAS_EXTRA = {"2026-08-17":1,"2026-10-09":1};
 var MONTHS_ES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 var DAYS_ES   = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 
@@ -669,7 +685,8 @@ function handleLogin() {
           name:    data.nombre || user,
           email:   data.email  || user,
           usuario: user,
-          avatarUrl: data.avatarUrl || ""
+          avatarUrl: data.avatarUrl || "",
+          limiteMensual: parseInt(data.limiteMensual)||0
         };
         document.getElementById("profileName").textContent  = currentUser.name;
         document.getElementById("profileEmail").textContent = currentUser.email;
@@ -742,8 +759,25 @@ function renderProfile() {
     return d.getMonth()===mo && d.getFullYear()===yr;
   });
   document.getElementById("statTotal").textContent     = thisMonth.length;
-  document.getElementById("statConfirmed").textContent = thisMonth.filter(function(s){return s.estado==="Confirmado";}).length;
+  var confirmedThisMonth = thisMonth.filter(function(s){return s.estado==="Confirmado";}).length;
+  document.getElementById("statConfirmed").textContent = confirmedThisMonth;
   document.getElementById("statCancelled").textContent = thisMonth.filter(function(s){return s.estado==="Cancelado";}).length;
+
+  // Progreso de sesiones mensuales (solo si el alumno tiene límite configurado)
+  var limitBox = document.getElementById("sessionLimitBox");
+  if (currentUser && currentUser.limiteMensual > 0) {
+    var max = currentUser.limiteMensual;
+    var pct = Math.min(100, Math.round((confirmedThisMonth/max)*100));
+    var color = pct>=100 ? "#E74C3C" : (pct>=75 ? "#E6A600" : "#4CAF82");
+    document.getElementById("sessionLimitText").textContent = confirmedThisMonth+" de "+max;
+    document.getElementById("sessionLimitText").style.color = color;
+    var fill = document.getElementById("sessionLimitFill");
+    fill.style.width = pct+"%";
+    fill.style.background = color;
+    limitBox.style.display = "block";
+  } else {
+    limitBox.style.display = "none";
+  }
 
   var hoy = new Date(); hoy.setHours(0,0,0,0);
   var future = userSessions.filter(function(s){
@@ -875,11 +909,10 @@ function backToCalendar(){
 function fetchCupos(){
   var block=document.getElementById("inputBlock").value;
   if(!block||!selectedDate)return;
-  var dias=["","lunes","martes","miercoles","jueves","viernes"];
-  var diaKey=dias[selectedDate.getDay()]||"lunes";
-  fetch(APPS_URL+"?bloque="+encodeURIComponent(block)+"&dia="+encodeURIComponent(diaKey))
+  var fechaStr=selectedDate.getFullYear()+"-"+String(selectedDate.getMonth()+1).padStart(2,"0")+"-"+String(selectedDate.getDate()).padStart(2,"0");
+  fetch(APPS_URL+"?bloque="+encodeURIComponent(block)+"&fecha="+encodeURIComponent(fechaStr))
     .then(function(r){return r.json();})
-    .then(function(data){renderSlots(data.ocupados||0,data.alumnos||[]);updateBadge(data.libres||6);})
+    .then(function(data){renderSlots(data.ocupados||0,data.alumnos||[]);updateBadge(data.libres!=null?data.libres:6);})
     .catch(function(){renderSlots(0,[]);updateBadge(6);});
 }
 document.getElementById("inputBlock").addEventListener("change",fetchCupos);
@@ -911,8 +944,29 @@ function handleConfirm(){
 
   // Validar 4 horas de anticipación
   if(!validarTiempoAnticipacion(fecha, block)){
-    alert("⏰ Las clases deben agendarse con al menos 4 horas de anticipación. Por favor elige un horario más adelante.");
+    showAlert("⏰ Las clases deben agendarse con al menos 4 horas de anticipación. Por favor elige un horario más adelante.","warning");
     return;
+  }
+
+  // Evitar doble inscripción en el mismo horario y día
+  var yaInscrito=userSessions.some(function(s){
+    return s.fecha===fecha && s.bloque===block && s.estado==="Confirmado";
+  });
+  if(yaInscrito){
+    showAlert("Ya tienes una clase agendada en ese mismo horario y día.","warning");
+    return;
+  }
+
+  // Límite de sesiones mensuales (si el perfil trae un límite configurado)
+  if(currentUser.limiteMensual){
+    var mesSel=fecha.substring(0,7); // "YYYY-MM"
+    var usadasEsteMes=userSessions.filter(function(s){
+      return s.estado==="Confirmado" && s.fecha.substring(0,7)===mesSel;
+    }).length;
+    if(usadasEsteMes>=currentUser.limiteMensual){
+      showAlert("Ya usaste tus "+currentUser.limiteMensual+" sesiones de este mes. Si necesitas más, contacta a Benjamín.","warning");
+      return;
+    }
   }
 
   showLoading("CONFIRMANDO...");
@@ -931,9 +985,9 @@ function handleConfirm(){
         {k:"Estado",v:'<span style="color:var(--orange)">✓ Confirmado</span>'},
         {k:"Registrado",v:new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})}
       ].map(function(r){return '<div class="detail-row"><span class="detail-key">'+r.k+'</span><span>'+r.v+'</span></div>';}).join("");
-      setScreen("screenSuccess");showToast();renderProfile();buildCalendar();
+      setScreen("screenSuccess");showToast();renderProfile();buildCalendar();fetchCupos();
       });
-    }).catch(function(){hideLoading(function(){alert("Error al registrar. Intenta de nuevo.");});});
+    }).catch(function(){hideLoading(function(){showAlert("No se pudo registrar tu clase. Intenta de nuevo.","error");});});
 }
 
 // ── SUSPENDER ──────────────────────────────────────────────────────────
@@ -946,7 +1000,7 @@ function suspendClass(fecha,bloque,id){
   var fechaClase = new Date(parseInt(partesFecha[0]),parseInt(partesFecha[1])-1,parseInt(partesFecha[2]),parseInt(partesHora[0]),parseInt(partesHora[1]),0);
   var diffHoras = (fechaClase - new Date())/(1000*60*60);
   if(diffHoras < 2){
-    alert("⏰ Solo puedes suspender una clase hasta 2 horas antes. Para una emergencia, escríbele directamente a Benjamín.");
+    showAlert("⏰ Solo puedes suspender una clase hasta 2 horas antes. Para una emergencia, escríbele directamente a Benjamín.","warning");
     return;
   }
 
@@ -961,13 +1015,26 @@ function suspendClass(fecha,bloque,id){
         var secs=5;
         var iv=setInterval(function(){secs--;var el=document.getElementById("cancelCountdown");if(el)el.textContent="Volviendo en "+secs+" segundo"+(secs!==1?"s":"")+"...";if(secs<=0){clearInterval(iv);backToProfile();}},1000);
       });
-    }).catch(function(){hideLoading(function(){alert("Error al suspender. Intenta de nuevo.");});});
+    }).catch(function(){hideLoading(function(){showAlert("No se pudo suspender la clase. Intenta de nuevo.","error");});});
 }
 
 // ── NAVEGACIÓN ──────────────────────────────────────────────────────────
 function setScreen(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});document.getElementById(id).classList.add("active");}
 function backToProfile(){setScreen("screenProfile");showTab("tabAgenda");backToCalendar();renderProfile();}
 function showToast(){var t=document.getElementById("toast");if(!t)return;setTimeout(function(){t.classList.add("show");setTimeout(function(){t.classList.remove("show");},5000);},900);}
+
+// ── ALERTA VISUAL (reemplaza alert() nativo — sin botones, autodesaparece) ──
+var alertTimeoutId=null;
+function showAlert(msg,type){
+  var el=document.getElementById("alertToast");
+  if(!el)return;
+  if(alertTimeoutId){clearTimeout(alertTimeoutId);alertTimeoutId=null;}
+  el.textContent=msg;
+  el.className="alert-toast "+(type||"warning");
+  void el.offsetWidth; // reflow para reiniciar animación si ya estaba visible
+  el.classList.add("show");
+  alertTimeoutId=setTimeout(function(){el.classList.remove("show");},5000);
+}
 function shake(id){var el=document.getElementById(id);if(!el)return;el.style.borderColor="var(--orange)";el.style.animation="shakeX .4s ease";setTimeout(function(){el.style.borderColor="";el.style.animation="";},500);}
 
 window.addEventListener("load",function(){buildCalendar();});
