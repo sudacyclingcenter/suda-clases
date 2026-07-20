@@ -49,6 +49,19 @@ html{overscroll-behavior-y:none;background:var(--black)}
 .session-limit-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px}
 .session-limit-track{width:100%;height:8px;background:rgba(245,240,235,.08);border-radius:20px;overflow:hidden}
 .session-limit-fill{height:100%;border-radius:20px;transition:width .4s ease,background .4s ease}
+
+/* ── PANEL COACH ── */
+.coach-block{margin-bottom:16px}
+.coach-block-time{font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:.5px;color:var(--orange);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.coach-block-count{font-size:10px;font-weight:800;color:var(--muted);background:var(--surface);padding:2px 8px;border-radius:20px}
+.coach-student-chip{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.coach-student-name{font-size:13px;font-weight:700;color:var(--text)}
+.coach-suspend-btn{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#E74C3C;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.coach-suspend-btn:hover{background:rgba(231,76,60,.2)}
+.coach-usage-row{padding:10px 0;border-bottom:1px solid var(--border)}
+.coach-usage-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.coach-usage-name{font-size:13px;font-weight:700;color:var(--text)}
+.coach-usage-count{font-size:12px;font-weight:800}
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center}
 .stat-num{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--orange);line-height:1}
@@ -372,6 +385,59 @@ html{overscroll-behavior-y:none;background:var(--black)}
     <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted);font-weight:600">
       ¿Olvidaste tu contraseña? Contacta a tu entrenador
     </div>
+    <div style="text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+      <a href="javascript:void(0)" onclick="setScreen('screenCoachLogin')" style="font-size:11px;color:var(--muted);font-weight:700;text-decoration:none;letter-spacing:.5px">🔑 Acceso Coach</a>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN COACH -->
+<div class="screen" id="screenCoachLogin">
+  <div class="login-section">
+    <div class="login-title">Panel del Coach</div>
+    <div class="login-sub">Ingresa la contraseña maestra<br>para acceder al resumen general</div>
+  </div>
+  <div class="card">
+    <div id="coachLoginError" class="login-error">❌ Contraseña incorrecta</div>
+    <div class="field">
+      <label>Contraseña maestra</label>
+      <input type="password" id="inputCoachPass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')handleCoachLogin()">
+    </div>
+    <button class="btn btn-primary" onclick="handleCoachLogin()">INGRESAR</button>
+    <button class="btn-ghost" onclick="setScreen('screenLogin')" style="margin-top:8px">← Volver</button>
+  </div>
+</div>
+
+<!-- PANEL COACH -->
+<div class="screen" id="screenCoach">
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin:0">Panel del Coach</div>
+      <button onclick="coachLogout()" style="background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">Salir</button>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>Ver agenda del día</label>
+      <input type="date" id="coachDatePicker" onchange="loadCoachData()">
+    </div>
+  </div>
+
+  <!-- Totales del mes -->
+  <div class="stats-grid" style="grid-template-columns:1fr 1fr">
+    <div class="stat-box"><div class="stat-num" id="coachStatConfirmadas" style="color:#4CAF82">0</div><div class="stat-label">Confirmadas (mes)</div></div>
+    <div class="stat-box"><div class="stat-num" id="coachStatCanceladas" style="color:#E74C3C">0</div><div class="stat-label">Suspendidas (mes)</div></div>
+  </div>
+
+  <!-- Agenda del día -->
+  <div class="card">
+    <div class="card-title" style="font-size:18px;margin-bottom:12px" id="coachAgendaTitle">Agenda del día</div>
+    <div id="coachAgendaList"><div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-weight:600">Cargando...</div></div>
+  </div>
+
+  <!-- Alumnos: uso mensual -->
+  <div class="card">
+    <div class="card-title" style="font-size:18px;margin-bottom:4px">Uso mensual por alumno</div>
+    <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:12px">Ordenado por cercanía a su límite</div>
+    <div id="coachStudentsList"></div>
   </div>
 </div>
 
@@ -677,6 +743,7 @@ html{overscroll-behavior-y:none;background:var(--black)}
 
 <script>
 var APPS_URL = "https://script.google.com/macros/s/AKfycbyzaGGRg0iZt38QvRh6R967Hzcp0Bguo_4r15NmHv8Th8Au-QQ9Tb2sJri8cu87nOmgJg/exec";
+var COACH_MASTER_PASS = "suda2024"; // Cambia esto por tu contraseña de coach
 var LANDING  = "https://sudacyclingcenter.github.io/suda-clases";
 
 var FERIADOS = {"05-21":1,"06-20":1,"06-29":1,"07-16":1,"08-15":1,"09-18":1,"09-19":1,"10-12":1,"10-31":1,"11-01":1,"11-15":1,"12-08":1,"12-25":1,"01-01":1,"04-18":1,"04-19":1,"05-01":1};
@@ -754,6 +821,104 @@ function logout() {
   userSessions = [];
   selectedDate = null;
   window.location.href = LANDING;
+}
+
+// ── PANEL COACH ─────────────────────────────────────────────────────────
+function handleCoachLogin(){
+  var pass = document.getElementById("inputCoachPass").value;
+  if (pass === COACH_MASTER_PASS) {
+    document.getElementById("coachLoginError").style.display = "none";
+    document.getElementById("inputCoachPass").value = "";
+    var hoy = new Date();
+    var hoyStr = hoy.getFullYear()+"-"+String(hoy.getMonth()+1).padStart(2,"0")+"-"+String(hoy.getDate()).padStart(2,"0");
+    document.getElementById("coachDatePicker").value = hoyStr;
+    setScreen("screenCoach");
+    loadCoachData();
+  } else {
+    document.getElementById("coachLoginError").style.display = "block";
+    shake("inputCoachPass");
+  }
+}
+function coachLogout(){ setScreen("screenLogin"); }
+
+function loadCoachData(){
+  var fecha = document.getElementById("coachDatePicker").value;
+  if (!fecha) return;
+
+  var p = fecha.split("-");
+  var d = new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+  document.getElementById("coachAgendaTitle").textContent = "Agenda — " + DAYS_ES[d.getDay()] + " " + d.getDate() + "/" + String(d.getMonth()+1).padStart(2,"0");
+
+  showLoading("CARGANDO PANEL...");
+  fetch(APPS_URL + "?action=coachData&fecha=" + encodeURIComponent(fecha))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      hideLoading(function(){
+        document.getElementById("coachStatConfirmadas").textContent = data.confirmadasMes||0;
+        document.getElementById("coachStatCanceladas").textContent  = data.canceladasMes||0;
+        renderCoachAgenda(data.bloques||{}, fecha);
+        renderCoachStudents(data.alumnos||[]);
+      });
+    })
+    .catch(function(){
+      hideLoading(function(){
+        showAlert("No se pudo cargar el panel. Intenta de nuevo.","error");
+      });
+    });
+}
+
+function renderCoachAgenda(bloques, fecha){
+  var list = document.getElementById("coachAgendaList");
+  var horas = Object.keys(bloques).sort();
+  if (!horas.length){
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-weight:600">No hay clases confirmadas para este día.</div>';
+    return;
+  }
+  list.innerHTML = horas.map(function(h){
+    var alumnos = bloques[h];
+    var chips = alumnos.map(function(nombre){
+      return '<div class="coach-student-chip"><span class="coach-student-name">'+nombre+'</span>'
+        + '<button class="coach-suspend-btn" onclick="suspendClassCoach(&quot;'+nombre.replace(/"/g,'')+'&quot;,&quot;'+fecha+'&quot;,&quot;'+h+'&quot;)">Suspender</button></div>';
+    }).join('');
+    return '<div class="coach-block"><div class="coach-block-time">'+formatBloque(h)+'<span class="coach-block-count">'+alumnos.length+'/6</span></div>'+chips+'</div>';
+  }).join('');
+}
+
+function renderCoachStudents(alumnos){
+  var list = document.getElementById("coachStudentsList");
+  if (!alumnos.length){
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-weight:600">Sin datos de alumnos.</div>';
+    return;
+  }
+  list.innerHTML = alumnos.map(function(a){
+    if (!a.limite){
+      return '<div class="coach-usage-row"><div class="coach-usage-top"><span class="coach-usage-name">'+a.nombre+'</span><span class="coach-usage-count" style="color:var(--muted)">'+a.usadas+' (sin límite)</span></div></div>';
+    }
+    var pct = Math.min(100, Math.round((a.usadas/a.limite)*100));
+    var color = pct>=100 ? "#E74C3C" : (pct>=75 ? "#E6A600" : "#4CAF82");
+    return '<div class="coach-usage-row"><div class="coach-usage-top"><span class="coach-usage-name">'+a.nombre+'</span><span class="coach-usage-count" style="color:'+color+'">'+a.usadas+' de '+a.limite+'</span></div>'
+      + '<div class="session-limit-track"><div class="session-limit-fill" style="width:'+pct+'%;background:'+color+'"></div></div></div>';
+  }).join('');
+}
+
+function suspendClassCoach(nombre, fecha, bloque){
+  showConfirmModal("¿Suspender la clase de "+nombre+" del "+fecha+" a las "+bloque+" hrs?", function(){
+    showLoading("SUSPENDIENDO...");
+    var fd = new FormData();
+    fd.append("payload", JSON.stringify({nombre:nombre, bloque:bloque, fecha_entreno:fecha, estado:"Cancelado", observacion:"Suspendido por el coach"}));
+    fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
+      .then(function(){
+        hideLoading(function(){
+          showAlert("Clase de "+nombre+" suspendida.","warning");
+          loadCoachData();
+        });
+      })
+      .catch(function(){
+        hideLoading(function(){
+          showAlert("No se pudo suspender. Intenta de nuevo.","error");
+        });
+      });
+  });
 }
 
 // ── CARGAR SESIONES ────────────────────────────────────────────────────
