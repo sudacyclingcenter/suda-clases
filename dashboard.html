@@ -743,7 +743,6 @@ html{overscroll-behavior-y:none;background:var(--black)}
 
 <script>
 var APPS_URL = "https://script.google.com/macros/s/AKfycbyzaGGRg0iZt38QvRh6R967Hzcp0Bguo_4r15NmHv8Th8Au-QQ9Tb2sJri8cu87nOmgJg/exec";
-var COACH_MASTER_PASS = "suda2024"; // Cambia esto por tu contraseña de coach
 var LANDING  = "https://sudacyclingcenter.github.io/suda-clases";
 
 var FERIADOS = {"05-21":1,"06-20":1,"06-29":1,"07-16":1,"08-15":1,"09-18":1,"09-19":1,"10-12":1,"10-31":1,"11-01":1,"11-15":1,"12-08":1,"12-25":1,"01-01":1,"04-18":1,"04-19":1,"05-01":1};
@@ -826,20 +825,41 @@ function logout() {
 // ── PANEL COACH ─────────────────────────────────────────────────────────
 function handleCoachLogin(){
   var pass = document.getElementById("inputCoachPass").value;
-  if (pass === COACH_MASTER_PASS) {
-    document.getElementById("coachLoginError").style.display = "none";
-    document.getElementById("inputCoachPass").value = "";
-    var hoy = new Date();
-    var hoyStr = hoy.getFullYear()+"-"+String(hoy.getMonth()+1).padStart(2,"0")+"-"+String(hoy.getDate()).padStart(2,"0");
-    document.getElementById("coachDatePicker").value = hoyStr;
-    setScreen("screenCoach");
-    loadCoachData();
-  } else {
-    document.getElementById("coachLoginError").style.display = "block";
-    shake("inputCoachPass");
-  }
+  if (!pass) { shake("inputCoachPass"); return; }
+
+  showLoading("VERIFICANDO...");
+  fetch(APPS_URL + "?action=coachLogin&password=" + encodeURIComponent(pass))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      hideLoading(function(){
+        if (data && data.autorizado) {
+          document.getElementById("coachLoginError").style.display = "none";
+          document.getElementById("inputCoachPass").value = "";
+          sessionStorage.setItem("sudaCoachAuth","1");
+          abrirPanelCoach();
+        } else {
+          document.getElementById("coachLoginError").style.display = "block";
+          shake("inputCoachPass");
+        }
+      });
+    })
+    .catch(function(){
+      hideLoading(function(){
+        showAlert("Error de conexión. Intenta de nuevo.","error");
+      });
+    });
 }
-function coachLogout(){ setScreen("screenLogin"); }
+function abrirPanelCoach(){
+  var hoy = new Date();
+  var hoyStr = hoy.getFullYear()+"-"+String(hoy.getMonth()+1).padStart(2,"0")+"-"+String(hoy.getDate()).padStart(2,"0");
+  document.getElementById("coachDatePicker").value = hoyStr;
+  setScreen("screenCoach");
+  loadCoachData();
+}
+function coachLogout(){
+  sessionStorage.removeItem("sudaCoachAuth");
+  setScreen("screenLogin");
+}
 
 function loadCoachData(){
   var fecha = document.getElementById("coachDatePicker").value;
@@ -1266,7 +1286,12 @@ function showAlert(msg,type){
 }
 function shake(id){var el=document.getElementById(id);if(!el)return;el.style.borderColor="var(--orange)";el.style.animation="shakeX .4s ease";setTimeout(function(){el.style.borderColor="";el.style.animation="";},500);}
 
-window.addEventListener("load",function(){buildCalendar();});
+window.addEventListener("load",function(){
+  buildCalendar();
+  if (sessionStorage.getItem("sudaCoachAuth") === "1") {
+    abrirPanelCoach();
+  }
+});
 
 // ── SIDE MENU ────────────────────────────────────────────────────────────
 function toggleMenu() {
