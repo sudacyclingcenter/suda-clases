@@ -116,6 +116,17 @@ html{overscroll-behavior-y:none;background:var(--black)}
 .alert-toast.show{transform:translateX(-50%) translateY(0)}
 .alert-toast.warning{background:#2A2110;border:1px solid rgba(230,166,0,.5);color:#F5F0EB}
 .alert-toast.error{background:#2A1414;border:1px solid rgba(231,76,60,.5);color:#F5F0EB}
+.confirm-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10500;display:none;align-items:center;justify-content:center;padding:24px}
+.confirm-modal-overlay.show{display:flex}
+.confirm-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:340px;width:100%;padding:24px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.confirm-modal-icon{font-size:32px;margin-bottom:10px}
+.confirm-modal-msg{font-size:15px;font-weight:700;color:var(--text);line-height:1.6;margin-bottom:22px}
+.confirm-modal-actions{display:flex;flex-direction:column;gap:10px}
+.confirm-modal-btn{border:none;border-radius:10px;padding:14px;font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.confirm-modal-yes{background:var(--orange);color:white}
+.confirm-modal-yes:hover{transform:translateY(-1px)}
+.confirm-modal-no{background:none;border:1px solid var(--border);color:var(--muted)}
+.confirm-modal-no:hover{border-color:var(--muted);color:var(--text)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* FOOTER */
@@ -652,6 +663,18 @@ html{overscroll-behavior-y:none;background:var(--black)}
 <div class="toast" id="toast">Recuerda traer tu botella, una toalla y ganas para sufrir 💪🏽 🔥</div>
 <div class="alert-toast" id="alertToast"></div>
 
+<!-- CONFIRMACIÓN PROPIA (reemplaza confirm() nativo) -->
+<div class="confirm-modal-overlay" id="confirmModalOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-modal-icon">⏸️</div>
+    <div class="confirm-modal-msg" id="confirmModalMsg">¿Confirmas esta acción?</div>
+    <div class="confirm-modal-actions">
+      <button class="confirm-modal-btn confirm-modal-yes" onclick="confirmModalYes()">Sí, suspender</button>
+      <button class="confirm-modal-btn confirm-modal-no" onclick="confirmModalNo()">No, mantener clase</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var APPS_URL = "https://script.google.com/macros/s/AKfycbyzaGGRg0iZt38QvRh6R967Hzcp0Bguo_4r15NmHv8Th8Au-QQ9Tb2sJri8cu87nOmgJg/exec";
 var LANDING  = "https://sudacyclingcenter.github.io/suda-clases";
@@ -1012,9 +1035,29 @@ function handleConfirm(){
 }
 
 // ── SUSPENDER ──────────────────────────────────────────────────────────
-function suspendClass(fecha,bloque,id){
-  if(!confirm("¿Suspender clase del "+fecha+" a las "+bloque+" hrs?"))return;
+// ── CONFIRMACIÓN VISUAL (reemplaza confirm() nativo — nunca se suprime silenciosamente) ──
+var confirmModalCallback=null;
+function showConfirmModal(msg,onYes){
+  document.getElementById("confirmModalMsg").textContent=msg;
+  confirmModalCallback=onYes;
+  document.getElementById("confirmModalOverlay").classList.add("show");
+}
+function confirmModalYes(){
+  document.getElementById("confirmModalOverlay").classList.remove("show");
+  var cb=confirmModalCallback;confirmModalCallback=null;
+  if(cb)cb();
+}
+function confirmModalNo(){
+  document.getElementById("confirmModalOverlay").classList.remove("show");
+  confirmModalCallback=null;
+}
 
+function suspendClass(fecha,bloque,id){
+  showConfirmModal("¿Suspender clase del "+fecha+" a las "+bloque+" hrs?",function(){
+    ejecutarSuspension(fecha,bloque,id);
+  });
+}
+function ejecutarSuspension(fecha,bloque,id){
   // Validar que falten al menos 2 horas (suspensión)
   var partesFecha = fecha.split("-");
   var partesHora  = bloque.split(":");
