@@ -93,6 +93,7 @@ html{overscroll-behavior-y:none;background:var(--black)}
 /* SUSPENDER */
 .suspend-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
 .btn-suspend-item{font-size:11px;font-weight:800;padding:6px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(192,57,43,.3);background:rgba(192,57,43,.1);color:#E74C3C;font-family:'Nunito',sans-serif;transition:all .2s;white-space:nowrap}
+.btn-reagendar-item{font-size:11px;font-weight:800;padding:6px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(240,64,32,.3);background:rgba(240,64,32,.1);color:var(--orange);font-family:'Nunito',sans-serif;transition:all .2s;white-space:nowrap;margin-right:6px}
 
 /* SLOTS */
 .slots-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px}
@@ -483,6 +484,10 @@ html{overscroll-behavior-y:none;background:var(--black)}
 
   <!-- TAB AGENDAR -->
   <div id="tabAgenda">
+    <div id="reagendarBanner" style="display:none;background:rgba(240,64,32,.1);border:1px solid rgba(240,64,32,.3);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <div id="reagendarBannerText" style="font-size:13px;font-weight:700;color:var(--orange);line-height:1.5"></div>
+      <button onclick="cancelarReagendar()" style="margin-top:8px;background:none;border:1px solid rgba(240,64,32,.4);color:var(--orange);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">✕ Cancelar reagendamiento</button>
+    </div>
     <div class="step-indicator" id="stepIndicator">
       <div class="step-dot active" id="step1dot">1</div>
       <div class="step-line" id="stepLine1"></div>
@@ -720,6 +725,17 @@ html{overscroll-behavior-y:none;background:var(--black)}
   </div>
 </div>
 
+<!-- REAGENDAMIENTO -->
+<div class="screen" id="screenReagendado">
+  <div class="result-screen">
+    <div style="font-size:56px;margin-bottom:14px">🔄</div>
+    <div class="result-title">¡REAGENDADO!</div>
+    <div class="result-sub">Tu clase fue movida con éxito.<br>¡Te esperamos en el nuevo horario! 🔥</div>
+    <div class="detail-card" id="reagendarDetail"></div>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="backToProfile()">← Volver a mi perfil</button>
+  </div>
+</div>
+
 <div class="footer-section">
   <img class="footer-logo" src="https://sudacyclingcenter.github.io/suda-clases/BOWIE%20CERTIFICAT%40300x.png" alt="Suda CC">
   <div class="footer-text">Suda Cycling Center · Las Condes, Santiago<br>Balmoral 309, local 215</div>
@@ -741,6 +757,41 @@ html{overscroll-behavior-y:none;background:var(--black)}
   </div>
 </div>
 
+<!-- REAGENDAR (coach) -->
+<div class="confirm-modal-overlay" id="reagendarCoachOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-modal-icon">🔄</div>
+    <div class="confirm-modal-msg" id="reagendarCoachMsg">Reagendar clase</div>
+    <div class="field" style="text-align:left;margin-bottom:10px">
+      <label>Nueva fecha</label>
+      <input type="date" id="reagendarCoachFecha" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600">
+    </div>
+    <div class="field" style="text-align:left;margin-bottom:6px">
+      <label>Nuevo horario</label>
+      <select id="reagendarCoachBloque" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;-webkit-appearance:none">
+        <option value="">— Selecciona el horario —</option>
+        <optgroup label="🌅 Mañana">
+          <option value="07:30">07:30 hrs</option><option value="08:00">08:00 hrs</option>
+          <option value="08:30">08:30 hrs</option><option value="09:00">09:00 hrs</option>
+          <option value="09:30">09:30 hrs</option><option value="10:00">10:00 hrs</option>
+          <option value="10:30">10:30 hrs</option><option value="11:00">11:00 hrs</option>
+          <option value="11:30">11:30 hrs</option><option value="12:00">12:00 hrs</option>
+          <option value="12:30">12:30 hrs</option><option value="13:00">13:00 hrs</option>
+        </optgroup>
+        <optgroup label="🌆 Tarde">
+          <option value="17:00">17:00 hrs</option><option value="17:30">17:30 hrs</option>
+          <option value="18:00">18:00 hrs</option><option value="18:30">18:30 hrs</option>
+          <option value="19:00">19:00 hrs</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="confirm-modal-actions">
+      <button class="confirm-modal-btn confirm-modal-yes" onclick="confirmarReagendarCoach()">Reagendar</button>
+      <button class="confirm-modal-btn confirm-modal-no" onclick="cerrarReagendarCoach()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var APPS_URL = "https://script.google.com/macros/s/AKfycbyzaGGRg0iZt38QvRh6R967Hzcp0Bguo_4r15NmHv8Th8Au-QQ9Tb2sJri8cu87nOmgJg/exec";
 var LANDING  = "https://sudacyclingcenter.github.io/suda-clases";
@@ -752,6 +803,7 @@ var DAYS_ES   = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sá
 
 var currentUser  = null;
 var selectedDate = null;
+var reagendarContext = null;
 var userSessions = [];
 
 // ── LOGIN CON USUARIO/CONTRASEÑA ──────────────────────────────────────
@@ -897,8 +949,8 @@ function renderCoachAgenda(bloques, fecha){
   list.innerHTML = horas.map(function(h){
     var alumnos = bloques[h];
     var chips = alumnos.map(function(nombre){
-      return '<div class="coach-student-chip"><span class="coach-student-name">'+nombre+'</span>'
-        + '<button class="coach-suspend-btn" onclick="suspendClassCoach(&quot;'+nombre.replace(/"/g,'')+'&quot;,&quot;'+fecha+'&quot;,&quot;'+h+'&quot;)">Suspender</button></div>';
+      return '<div class="coach-student-chip"><span class="coach-student-name">'+nombre+'</span><div style="display:flex"><button class="btn-reagendar-item" onclick="abrirReagendarCoach(&quot;'+nombre.replace(/"/g,'')+'&quot;,&quot;'+fecha+'&quot;,&quot;'+h+'&quot;)">Reagendar</button>'
+        + '<button class="coach-suspend-btn" onclick="suspendClassCoach(&quot;'+nombre.replace(/"/g,'')+'&quot;,&quot;'+fecha+'&quot;,&quot;'+h+'&quot;)">Suspender</button></div></div>';
     }).join('');
     return '<div class="coach-block"><div class="coach-block-time">'+formatBloque(h)+'<span class="coach-block-count">'+alumnos.length+'/6</span></div>'+chips+'</div>';
   }).join('');
@@ -939,6 +991,55 @@ function suspendClassCoach(nombre, fecha, bloque){
         });
       });
   });
+}
+
+// ── REAGENDAR (coach) ─────────────────────────────────────────────────
+var reagendarCoachContext=null;
+function abrirReagendarCoach(nombre, fecha, bloque){
+  reagendarCoachContext={nombre:nombre, fecha:fecha, bloque:bloque};
+  document.getElementById("reagendarCoachMsg").textContent="Reagendar clase de "+nombre+" ("+fecha+" · "+bloque+" hrs)";
+  document.getElementById("reagendarCoachFecha").value=fecha;
+  document.getElementById("reagendarCoachBloque").value="";
+  document.getElementById("reagendarCoachOverlay").classList.add("show");
+}
+function cerrarReagendarCoach(){
+  reagendarCoachContext=null;
+  document.getElementById("reagendarCoachOverlay").classList.remove("show");
+}
+function confirmarReagendarCoach(){
+  if(!reagendarCoachContext)return;
+  var fechaNueva=document.getElementById("reagendarCoachFecha").value;
+  var bloqueNuevo=document.getElementById("reagendarCoachBloque").value;
+  if(!fechaNueva){shake("reagendarCoachFecha");return;}
+  if(!bloqueNuevo){shake("reagendarCoachBloque");return;}
+  var ctx=reagendarCoachContext;
+  if(fechaNueva===ctx.fecha && bloqueNuevo===ctx.bloque){
+    showAlert("Elige una fecha u horario distinto al actual.","warning");
+    return;
+  }
+  document.getElementById("reagendarCoachOverlay").classList.remove("show");
+  showLoading("REAGENDANDO...");
+  var fd=new FormData();
+  fd.append("payload",JSON.stringify({
+    action:"reagendar",
+    nombre:ctx.nombre,
+    fecha_actual:ctx.fecha, bloque_actual:ctx.bloque,
+    fecha_nueva:fechaNueva, bloque_nueva:bloqueNuevo,
+    observacion:"Reagendado por el coach", origen:"coach"
+  }));
+  fetch(APPS_URL,{method:"POST",body:fd,mode:"no-cors"})
+    .then(function(){
+      hideLoading(function(){
+        showAlert("Clase de "+ctx.nombre+" reagendada.","warning");
+        reagendarCoachContext=null;
+        loadCoachData();
+      });
+    })
+    .catch(function(){
+      hideLoading(function(){
+        showAlert("No se pudo reagendar. Intenta de nuevo.","error");
+      });
+    });
 }
 
 // ── CARGAR SESIONES ────────────────────────────────────────────────────
@@ -1051,7 +1152,7 @@ function renderSuspendList() {
   list.innerHTML=future.slice(0,10).map(function(s){
     var p=s.fecha.split("-");
     var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
-    return '<div class="suspend-item"><div><div style="font-size:13px;font-weight:700">'+DAYS_ES[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+'</div><div style="font-size:11px;color:var(--muted)">'+formatBloque(s.bloque)+'</div></div><button class="btn-suspend-item" onclick="suspendClass(&quot;'+s.fecha+'&quot;,&quot;'+s.bloque+'&quot;,&quot;'+s.id+'&quot;)">Suspender</button></div>';
+    return '<div class="suspend-item"><div><div style="font-size:13px;font-weight:700">'+DAYS_ES[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+'</div><div style="font-size:11px;color:var(--muted)">'+formatBloque(s.bloque)+'</div></div><div style="display:flex"><button class="btn-reagendar-item" onclick="iniciarReagendar(&quot;'+s.fecha+'&quot;,&quot;'+s.bloque+'&quot;,&quot;'+s.id+'&quot;)">Reagendar</button><button class="btn-suspend-item" onclick="suspendClass(&quot;'+s.fecha+'&quot;,&quot;'+s.bloque+'&quot;,&quot;'+s.id+'&quot;)">Suspender</button></div></div>';
   }).join('');
 }
 
@@ -1166,6 +1267,7 @@ function updateBadge(libres){
 
 // ── CONFIRMAR ──────────────────────────────────────────────────────────
 function handleConfirm(){
+  if(reagendarContext){ handleReagendarConfirm(); return; }
   var block=document.getElementById("inputBlock").value;
   if(!block){shake("inputBlock");return;}
   if(!selectedDate||!currentUser)return;
@@ -1217,6 +1319,84 @@ function handleConfirm(){
       setScreen("screenSuccess");showToast();renderProfile();buildCalendar();fetchCupos();
       });
     }).catch(function(){hideLoading(function(){showAlert("No se pudo registrar tu clase. Intenta de nuevo.","error");});});
+}
+
+// ── REAGENDAR (alumno) ────────────────────────────────────────────────
+function iniciarReagendar(fecha,bloque,id){
+  if(!validarTiempoAnticipacion(fecha, bloque)){
+    showAlert("⏰ Solo puedes reagendar con al menos 4 horas de anticipación a tu clase actual. Para una emergencia, escríbele directamente a Benjamín.","warning");
+    return;
+  }
+  reagendarContext={fecha:fecha,bloque:bloque,id:id};
+  showTab("tabAgenda");
+  backToCalendar();
+  var DN=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  var p=fecha.split("-");
+  var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+  document.getElementById("reagendarBannerText").textContent="🔄 Reagendando tu clase del "+DN[d.getDay()]+" "+d.getDate()+"/"+String(d.getMonth()+1).padStart(2,"0")+" a las "+bloque+" hrs. Elige la nueva fecha y horario:";
+  document.getElementById("reagendarBanner").style.display="block";
+}
+
+function cancelarReagendar(){
+  reagendarContext=null;
+  document.getElementById("reagendarBanner").style.display="none";
+  backToCalendar();
+}
+
+function handleReagendarConfirm(){
+  var block=document.getElementById("inputBlock").value;
+  if(!block){shake("inputBlock");return;}
+  if(!selectedDate||!currentUser)return;
+  var fecha=selectedDate.getFullYear()+"-"+String(selectedDate.getMonth()+1).padStart(2,"0")+"-"+String(selectedDate.getDate()).padStart(2,"0");
+
+  if(fecha===reagendarContext.fecha && block===reagendarContext.bloque){
+    showAlert("Elige un horario distinto al que ya tienes agendado.","warning");
+    return;
+  }
+
+  if(!validarTiempoAnticipacion(fecha, block)){
+    showAlert("⏰ El nuevo horario también debe tener al menos 4 horas de anticipación.","warning");
+    return;
+  }
+
+  var yaInscrito=userSessions.some(function(s){
+    return s.fecha===fecha && s.bloque===block && s.estado==="Confirmado" && s.id!==reagendarContext.id;
+  });
+  if(yaInscrito){
+    showAlert("Ya tienes una clase agendada en ese mismo horario y día.","warning");
+    return;
+  }
+
+  var ctx=reagendarContext;
+  showLoading("REAGENDANDO...");
+  var fd=new FormData();
+  fd.append("payload",JSON.stringify({
+    action:"reagendar",
+    nombre:currentUser.name, email:currentUser.email,
+    fecha_actual:ctx.fecha, bloque_actual:ctx.bloque,
+    fecha_nueva:fecha, bloque_nueva:block,
+    observacion:"Reagendado por el alumno", origen:"atleta"
+  }));
+  fetch(APPS_URL,{method:"POST",body:fd,mode:"no-cors"})
+    .then(function(){
+      hideLoading(function(){
+        userSessions=userSessions.map(function(s){
+          if(s.fecha===ctx.fecha && s.bloque===ctx.bloque && s.id===ctx.id) return Object.assign({},s,{fecha:fecha,bloque:block});
+          return s;
+        });
+        var DN=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+        var pOld=ctx.fecha.split("-");
+        var dOld=new Date(parseInt(pOld[0]),parseInt(pOld[1])-1,parseInt(pOld[2]));
+        var dNew=selectedDate;
+        document.getElementById("reagendarDetail").innerHTML=[
+          {k:"Antes",v:DN[dOld.getDay()]+" "+dOld.getDate()+"/"+String(dOld.getMonth()+1).padStart(2,"0")+" · "+ctx.bloque+" hrs"},
+          {k:"Ahora",v:'<span style="color:var(--orange)">'+DN[dNew.getDay()]+" "+dNew.getDate()+"/"+String(dNew.getMonth()+1).padStart(2,"0")+" · "+block+" hrs</span>"}
+        ].map(function(r){return '<div class="detail-row"><span class="detail-key">'+r.k+'</span><span>'+r.v+'</span></div>';}).join("");
+        reagendarContext=null;
+        document.getElementById("reagendarBanner").style.display="none";
+        setScreen("screenReagendado");showToast();renderProfile();buildCalendar();fetchCupos();
+      });
+    }).catch(function(){hideLoading(function(){showAlert("No se pudo reagendar. Intenta de nuevo.","error");});});
 }
 
 // ── SUSPENDER ──────────────────────────────────────────────────────────
