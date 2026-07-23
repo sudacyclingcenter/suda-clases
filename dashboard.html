@@ -32,6 +32,8 @@ html{overscroll-behavior-y:none;background:var(--black)}
 .btn-primary{background:var(--orange);color:var(--cream);box-shadow:0 4px 16px rgba(240,64,32,.3)}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(240,64,32,.4)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-secondary{background:transparent;color:var(--orange);border:1px solid rgba(240,64,32,.4)}
+.btn-secondary:hover{background:rgba(240,64,32,.08)}
 .btn-back{background:none;border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;transition:all .2s}
 .login-error{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);border-radius:10px;padding:12px;text-align:center;font-size:13px;font-weight:700;color:#E74C3C;margin-bottom:14px;display:none}
 
@@ -420,6 +422,8 @@ html{overscroll-behavior-y:none;background:var(--black)}
       <label>Ver agenda del día</label>
       <input type="date" id="coachDatePicker" onchange="loadCoachData()">
     </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="abrirAgendarCoach()">+ Agendar clase para un alumno</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="abrirAlumnosCoach()">👥 Ver alumnos</button>
   </div>
 
   <!-- Totales del mes -->
@@ -439,6 +443,21 @@ html{overscroll-behavior-y:none;background:var(--black)}
     <div class="card-title" style="font-size:18px;margin-bottom:4px">Uso mensual por alumno</div>
     <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:12px">Ordenado por cercanía a su límite</div>
     <div id="coachStudentsList"></div>
+  </div>
+</div>
+
+<!-- DIRECTORIO DE ALUMNOS (coach) -->
+<div class="screen" id="screenAlumnosCoach">
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin:0">Alumnos</div>
+      <button onclick="setScreen('screenCoach')" style="background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">← Volver</button>
+    </div>
+    <input type="text" id="alumnosCoachBuscar" placeholder="Buscar por nombre..." oninput="renderAlumnosCoachList()"
+      style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600">
+  </div>
+  <div class="card">
+    <div id="alumnosCoachList"></div>
   </div>
 </div>
 
@@ -792,6 +811,47 @@ html{overscroll-behavior-y:none;background:var(--black)}
   </div>
 </div>
 
+<!-- AGENDAR (coach, para un alumno) -->
+<div class="confirm-modal-overlay" id="agendarCoachOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-modal-icon">📅</div>
+    <div class="confirm-modal-msg">Agendar clase para un alumno</div>
+    <div class="field" style="text-align:left;margin-bottom:10px">
+      <label>Alumno</label>
+      <input type="text" id="agendarCoachNombre" list="agendarCoachAlumnosList" placeholder="Escribe o elige un nombre"
+        style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600">
+      <datalist id="agendarCoachAlumnosList"></datalist>
+    </div>
+    <div class="field" style="text-align:left;margin-bottom:10px">
+      <label>Fecha</label>
+      <input type="date" id="agendarCoachFecha" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600">
+    </div>
+    <div class="field" style="text-align:left;margin-bottom:6px">
+      <label>Horario</label>
+      <select id="agendarCoachBloque" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;-webkit-appearance:none">
+        <option value="">— Selecciona el horario —</option>
+        <optgroup label="🌅 Mañana">
+          <option value="07:30">07:30 hrs</option><option value="08:00">08:00 hrs</option>
+          <option value="08:30">08:30 hrs</option><option value="09:00">09:00 hrs</option>
+          <option value="09:30">09:30 hrs</option><option value="10:00">10:00 hrs</option>
+          <option value="10:30">10:30 hrs</option><option value="11:00">11:00 hrs</option>
+          <option value="11:30">11:30 hrs</option><option value="12:00">12:00 hrs</option>
+          <option value="12:30">12:30 hrs</option><option value="13:00">13:00 hrs</option>
+        </optgroup>
+        <optgroup label="🌆 Tarde">
+          <option value="17:00">17:00 hrs</option><option value="17:30">17:30 hrs</option>
+          <option value="18:00">18:00 hrs</option><option value="18:30">18:30 hrs</option>
+          <option value="19:00">19:00 hrs</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="confirm-modal-actions">
+      <button class="confirm-modal-btn confirm-modal-yes" onclick="confirmarAgendarCoach()">Agendar</button>
+      <button class="confirm-modal-btn confirm-modal-no" onclick="cerrarAgendarCoach()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var APPS_URL = "https://script.google.com/macros/s/AKfycbyzaGGRg0iZt38QvRh6R967Hzcp0Bguo_4r15NmHv8Th8Au-QQ9Tb2sJri8cu87nOmgJg/exec";
 var LANDING  = "https://sudacyclingcenter.github.io/suda-clases";
@@ -907,6 +967,7 @@ function abrirPanelCoach(){
   document.getElementById("coachDatePicker").value = hoyStr;
   setScreen("screenCoach");
   loadCoachData();
+  cargarAlumnosCoach();
 }
 function coachLogout(){
   sessionStorage.removeItem("sudaCoachAuth");
@@ -971,6 +1032,94 @@ function renderCoachStudents(alumnos){
     return '<div class="coach-usage-row"><div class="coach-usage-top"><span class="coach-usage-name">'+a.nombre+'</span><span class="coach-usage-count" style="color:'+color+'">'+a.usadas+' de '+a.limite+'</span></div>'
       + '<div class="session-limit-track"><div class="session-limit-fill" style="width:'+pct+'%;background:'+color+'"></div></div></div>';
   }).join('');
+}
+
+// ── DIRECTORIO DE ALUMNOS (coach) ────────────────────────────────────
+var alumnosCoachDetalleCache = null;
+function abrirAlumnosCoach(){
+  setScreen("screenAlumnosCoach");
+  document.getElementById("alumnosCoachBuscar").value = "";
+  document.getElementById("alumnosCoachList").innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-weight:600">Cargando...</div>';
+  fetch(APPS_URL + "?action=getAlumnosDetalle")
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      alumnosCoachDetalleCache = (d && d.alumnos) ? d.alumnos : [];
+      renderAlumnosCoachList();
+    })
+    .catch(function(){
+      alumnosCoachDetalleCache = [];
+      document.getElementById("alumnosCoachList").innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-weight:600">No se pudo cargar la lista.</div>';
+    });
+}
+function renderAlumnosCoachList(){
+  if (!alumnosCoachDetalleCache) return;
+  var q = (document.getElementById("alumnosCoachBuscar").value||"").toLowerCase().trim();
+  var lista = alumnosCoachDetalleCache.filter(function(a){
+    return !q || a.nombre.toLowerCase().indexOf(q) !== -1;
+  });
+  var cont = document.getElementById("alumnosCoachList");
+  if (!lista.length){
+    cont.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-weight:600">Sin resultados.</div>';
+    return;
+  }
+  cont.innerHTML = lista.map(function(a){
+    var limiteTxt = a.limiteMensual ? (a.limiteMensual + " clases/mes") : "Sin límite fijo";
+    var emailTxt = a.email || "Sin correo registrado";
+    return '<div class="suspend-item" style="align-items:flex-start;flex-direction:column;gap:4px">'
+      + '<div style="font-size:14px;font-weight:800">'+a.nombre+'</div>'
+      + '<div style="font-size:12px;color:var(--muted);font-weight:600">'+emailTxt+'</div>'
+      + '<div style="font-size:11px;color:var(--orange);font-weight:800">'+limiteTxt+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ── AGENDAR (coach, para un alumno) ──────────────────────────────────
+var alumnosCoachCache = null;
+function cargarAlumnosCoach(){
+  fetch(APPS_URL + "?action=getAlumnos")
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      alumnosCoachCache = (d && d.alumnos) ? d.alumnos : [];
+      var dl = document.getElementById("agendarCoachAlumnosList");
+      if (dl) dl.innerHTML = alumnosCoachCache.map(function(n){ return '<option value="'+n.replace(/"/g,'')+'">'; }).join('');
+    })
+    .catch(function(){ alumnosCoachCache = []; });
+}
+
+function abrirAgendarCoach(){
+  document.getElementById("agendarCoachNombre").value = "";
+  document.getElementById("agendarCoachFecha").value = document.getElementById("coachDatePicker").value || "";
+  document.getElementById("agendarCoachBloque").value = "";
+  if (!alumnosCoachCache) cargarAlumnosCoach();
+  document.getElementById("agendarCoachOverlay").classList.add("show");
+}
+function cerrarAgendarCoach(){
+  document.getElementById("agendarCoachOverlay").classList.remove("show");
+}
+function confirmarAgendarCoach(){
+  var nombre = document.getElementById("agendarCoachNombre").value.trim();
+  var fecha  = document.getElementById("agendarCoachFecha").value;
+  var bloque = document.getElementById("agendarCoachBloque").value;
+  if (!nombre){ shake("agendarCoachNombre"); return; }
+  if (!fecha){ shake("agendarCoachFecha"); return; }
+  if (!bloque){ shake("agendarCoachBloque"); return; }
+
+  document.getElementById("agendarCoachOverlay").classList.remove("show");
+  showLoading("AGENDANDO...");
+  var fd = new FormData();
+  fd.append("payload", JSON.stringify({nombre:nombre, bloque:bloque, fecha_entreno:fecha, estado:"Confirmado", observacion:"Agendado por el coach"}));
+  fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
+    .then(function(){
+      hideLoading(function(){
+        showAlert("Clase agendada para "+nombre+".","warning");
+        loadCoachData();
+      });
+    })
+    .catch(function(){
+      hideLoading(function(){
+        showAlert("No se pudo agendar. Intenta de nuevo.","error");
+      });
+    });
 }
 
 function suspendClassCoach(nombre, fecha, bloque){
