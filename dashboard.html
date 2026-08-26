@@ -34,6 +34,9 @@ html{overscroll-behavior-y:none;background:var(--black)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .btn-secondary{background:transparent;color:var(--orange);border:1px solid rgba(240,64,32,.4)}
 .btn-secondary:hover{background:rgba(240,64,32,.08)}
+.btn-secondary.modo-activo{background:var(--orange);color:white}
+.horario-check{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 4px;text-align:center;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;user-select:none;transition:all .15s}
+.horario-check.marcado{background:var(--orange);border-color:var(--orange);color:white}
 .btn-back{background:none;border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;transition:all .2s}
 .login-error{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);border-radius:10px;padding:12px;text-align:center;font-size:13px;font-weight:700;color:#E74C3C;margin-bottom:14px;display:none}
 
@@ -483,7 +486,7 @@ html{overscroll-behavior-y:none;background:var(--black)}
       <div class="card-title" style="margin:0">Días bloqueados</div>
       <button onclick="setScreen('screenCoach')" style="background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">← Volver</button>
     </div>
-    <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:12px">Nadie podrá agendar clases en los días que bloquees aquí — sin tocar código.</div>
+    <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:12px">Nadie podrá agendar clases en los días u horarios que bloquees aquí — sin tocar código.</div>
     <div class="field" style="text-align:left;margin-bottom:10px">
       <label>Fecha a bloquear</label>
       <input type="date" id="diaBloquearFecha" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600">
@@ -492,7 +495,12 @@ html{overscroll-behavior-y:none;background:var(--black)}
       <label>Motivo (opcional)</label>
       <input type="text" id="diaBloquearMotivo" placeholder="Ej: Vacaciones, evento, etc." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600">
     </div>
-    <button class="btn btn-primary" onclick="agregarDiaBloqueado()">🚫 Bloquear este día</button>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button id="btnModoDiaCompleto" class="btn-secondary" style="flex:1;padding:10px;border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer" onclick="setModoBloqueo('completo')">Día completo</button>
+      <button id="btnModoHorarios" class="btn-secondary" style="flex:1;padding:10px;border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer" onclick="setModoBloqueo('horarios')">Horarios específicos</button>
+    </div>
+    <div id="horariosBloquearGrid" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px"></div>
+    <button class="btn btn-primary" onclick="agregarDiaBloqueado()">🚫 Bloquear</button>
   </div>
   <div class="card">
     <div class="card-title" style="font-size:16px;margin-bottom:10px">Actualmente bloqueados</div>
@@ -897,7 +905,10 @@ var LANDING  = "https://sudacyclingcenter.github.io/suda-clases";
 
 var FERIADOS = {"05-21":1,"06-20":1,"06-29":1,"07-16":1,"08-15":1,"09-18":1,"09-19":1,"10-12":1,"10-31":1,"11-01":1,"11-15":1,"12-08":1,"12-25":1,"01-01":1,"04-18":1,"04-19":1,"05-01":1};
 var DIAS_EXTRA = {}; // se llena dinámicamente desde la planilla al cargar la página
-var diasBloqueadosCache = null; // [{fecha, motivo}, ...] tal como llega del servidor
+var diasBloqueadosCache = null; // [{fecha, motivo, bloques}, ...] tal como llega del servidor
+var BLOQUES_BLOQUEADOS = {}; // {fecha: [bloque1, bloque2, ...]} solo para bloqueos parciales
+var modoBloqueo = "completo"; // "completo" | "horarios"
+var BLOQUES_HORARIOS = ["07:30","08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","17:00","17:30","18:00","18:30","19:00"];
 var MONTHS_ES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 var DAYS_ES   = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 
@@ -1186,7 +1197,27 @@ function abrirDiasBloqueadosCoach(){
   setScreen("screenDiasBloqueadosCoach");
   document.getElementById("diaBloquearFecha").value = "";
   document.getElementById("diaBloquearMotivo").value = "";
+  if (!document.getElementById("horariosBloquearGrid").children.length) buildHorariosBloquearGrid();
+  setModoBloqueo("completo");
   renderDiasBloqueadosList();
+}
+
+function buildHorariosBloquearGrid(){
+  var grid = document.getElementById("horariosBloquearGrid");
+  grid.innerHTML = BLOQUES_HORARIOS.map(function(h){
+    return '<div class="horario-check" data-hora="'+h+'" onclick="toggleHorarioBloquear(this)">'+h+'</div>';
+  }).join('');
+}
+
+function toggleHorarioBloquear(el){
+  el.classList.toggle("marcado");
+}
+
+function setModoBloqueo(modo){
+  modoBloqueo = modo;
+  document.getElementById("btnModoDiaCompleto").classList.toggle("modo-activo", modo === "completo");
+  document.getElementById("btnModoHorarios").classList.toggle("modo-activo", modo === "horarios");
+  document.getElementById("horariosBloquearGrid").style.display = modo === "horarios" ? "grid" : "none";
 }
 
 function renderDiasBloqueadosList(){
@@ -1200,11 +1231,19 @@ function renderDiasBloqueadosList(){
     var p = dia.fecha.split("-");
     var d = new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
     var fechaLeg = DN[d.getDay()]+" "+d.getDate()+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+p[0];
-    return '<div class="suspend-item">'
+    var esDiaCompleto = !dia.bloques || !dia.bloques.length;
+    var detalle = esDiaCompleto ? "Día completo" : dia.bloques.join(", ")+" hrs";
+    return '<div class="suspend-item" style="align-items:flex-start;flex-direction:column;gap:6px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;width:100%">'
       + '<div><div style="font-size:13px;font-weight:700">'+fechaLeg+'</div>'
       + (dia.motivo ? '<div style="font-size:11px;color:var(--muted)">'+dia.motivo+'</div>' : '')
       + '</div>'
-      + '<button class="btn-suspend-item" onclick="quitarDiaBloqueado(&quot;'+dia.fecha+'&quot;)">Desbloquear</button>'
+      + '<button class="btn-suspend-item" onclick="quitarDiaBloqueado(&quot;'+dia.fecha+'&quot;)">Desbloquear todo</button>'
+      + '</div>'
+      + '<div style="font-size:11px;font-weight:800;color:var(--orange)">'+detalle+'</div>'
+      + (esDiaCompleto ? '' : '<div style="display:flex;flex-wrap:wrap;gap:6px">' + dia.bloques.map(function(h){
+          return '<span onclick="quitarBloqueEspecifico(&quot;'+dia.fecha+'&quot;,&quot;'+h+'&quot;)" style="font-size:10px;font-weight:700;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--muted)">'+h+' ✕</span>';
+        }).join('') + '</div>')
       + '</div>';
   }).join('');
 }
@@ -1214,52 +1253,99 @@ function agregarDiaBloqueado(){
   var motivo = document.getElementById("diaBloquearMotivo").value.trim();
   if (!fecha){ shake("diaBloquearFecha"); return; }
 
-  var yaBloqueado = diasBloqueadosCache && diasBloqueadosCache.some(function(d){ return d.fecha === fecha; });
-  if (yaBloqueado){
-    showAlert("Ese día ya está bloqueado.","warning");
+  var bloquesElegidos = [];
+  if (modoBloqueo === "horarios"){
+    bloquesElegidos = Array.prototype.slice.call(document.querySelectorAll("#horariosBloquearGrid .horario-check.marcado"))
+      .map(function(el){ return el.getAttribute("data-hora"); });
+    if (!bloquesElegidos.length){
+      showAlert("Elige al menos un horario, o cambia a \"Día completo\".","warning");
+      return;
+    }
+  }
+
+  var entradaExistente = diasBloqueadosCache && diasBloqueadosCache.find(function(d){ return d.fecha === fecha; });
+  if (entradaExistente && (!entradaExistente.bloques || !entradaExistente.bloques.length)){
+    showAlert("Ese día ya está bloqueado completo.","warning");
     return;
   }
 
   showLoading("BLOQUEANDO...");
   var fd = new FormData();
-  fd.append("payload", JSON.stringify({action:"bloquearDia", fecha:fecha, motivo:motivo}));
+  fd.append("payload", JSON.stringify({action:"bloquearDia", fecha:fecha, motivo:motivo, bloques:bloquesElegidos}));
   fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
     .then(function(){
       hideLoading(function(){
         diasBloqueadosCache = diasBloqueadosCache || [];
-        diasBloqueadosCache.push({fecha:fecha, motivo:motivo});
+        if (entradaExistente){
+          bloquesElegidos.forEach(function(h){ if (entradaExistente.bloques.indexOf(h) === -1) entradaExistente.bloques.push(h); });
+          if (motivo) entradaExistente.motivo = motivo;
+        } else {
+          diasBloqueadosCache.push({fecha:fecha, motivo:motivo, bloques:bloquesElegidos});
+        }
         diasBloqueadosCache.sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; });
-        DIAS_EXTRA[fecha] = 1;
+        aplicarCacheABloqueos();
         document.getElementById("diaBloquearFecha").value = "";
         document.getElementById("diaBloquearMotivo").value = "";
+        document.querySelectorAll("#horariosBloquearGrid .horario-check.marcado").forEach(function(el){ el.classList.remove("marcado"); });
         renderDiasBloqueadosList();
         buildCalendar();
-        showAlert("Día bloqueado.","warning");
+        showAlert(bloquesElegidos.length ? "Horarios bloqueados." : "Día bloqueado.","warning");
       });
     })
     .catch(function(){
-      hideLoading(function(){ showAlert("No se pudo bloquear el día. Intenta de nuevo.","error"); });
+      hideLoading(function(){ showAlert("No se pudo bloquear. Intenta de nuevo.","error"); });
     });
 }
 
 function quitarDiaBloqueado(fecha){
-  showConfirmModal("¿Desbloquear el "+fecha+" para que se pueda volver a agendar?", function(){
-    showLoading("DESBLOQUEANDO...");
-    var fd = new FormData();
-    fd.append("payload", JSON.stringify({action:"desbloquearDia", fecha:fecha}));
-    fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
-      .then(function(){
-        hideLoading(function(){
+  showConfirmModal("¿Desbloquear el "+fecha+" por completo?", function(){
+    ejecutarDesbloqueo(fecha, null);
+  });
+}
+
+function quitarBloqueEspecifico(fecha, hora){
+  showConfirmModal("¿Quitar el bloqueo de las "+hora+" hrs el "+fecha+"?", function(){
+    ejecutarDesbloqueo(fecha, [hora]);
+  });
+}
+
+function ejecutarDesbloqueo(fecha, bloques){
+  showLoading("DESBLOQUEANDO...");
+  var fd = new FormData();
+  var payload = {action:"desbloquearDia", fecha:fecha};
+  if (bloques) payload.bloques = bloques;
+  fd.append("payload", JSON.stringify(payload));
+  fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
+    .then(function(){
+      hideLoading(function(){
+        if (!bloques){
           diasBloqueadosCache = (diasBloqueadosCache||[]).filter(function(d){ return d.fecha !== fecha; });
-          delete DIAS_EXTRA[fecha];
-          renderDiasBloqueadosList();
-          buildCalendar();
-          showAlert("Día desbloqueado.","warning");
-        });
-      })
-      .catch(function(){
-        hideLoading(function(){ showAlert("No se pudo desbloquear. Intenta de nuevo.","error"); });
+        } else {
+          var entrada = diasBloqueadosCache && diasBloqueadosCache.find(function(d){ return d.fecha === fecha; });
+          if (entrada){
+            entrada.bloques = entrada.bloques.filter(function(h){ return bloques.indexOf(h) === -1; });
+            if (!entrada.bloques.length){
+              diasBloqueadosCache = diasBloqueadosCache.filter(function(d){ return d.fecha !== fecha; });
+            }
+          }
+        }
+        aplicarCacheABloqueos();
+        renderDiasBloqueadosList();
+        buildCalendar();
+        showAlert("Desbloqueado.","warning");
       });
+    })
+    .catch(function(){
+      hideLoading(function(){ showAlert("No se pudo desbloquear. Intenta de nuevo.","error"); });
+    });
+}
+
+function aplicarCacheABloqueos(){
+  DIAS_EXTRA = {};
+  BLOQUES_BLOQUEADOS = {};
+  (diasBloqueadosCache||[]).forEach(function(dia){
+    if (!dia.bloques || !dia.bloques.length) DIAS_EXTRA[dia.fecha] = 1;
+    else BLOQUES_BLOQUEADOS[dia.fecha] = dia.bloques;
   });
 }
 
@@ -1551,7 +1637,23 @@ function selectDate(date){
   document.getElementById("stepLabel").textContent="Elige tu bloque horario";
   var mf=document.getElementById("mainForm");if(mf)mf.classList.remove("hidden");
   if(mf)mf.scrollIntoView({behavior:"smooth",block:"nearest"});
+  actualizarBloquesDisponibles(date);
   fetchCupos();
+}
+
+function actualizarBloquesDisponibles(date){
+  var fechaStr = date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0");
+  var bloqueados = BLOQUES_BLOQUEADOS[fechaStr] || [];
+  var select = document.getElementById("inputBlock");
+  if (!select) return;
+  Array.prototype.forEach.call(select.querySelectorAll("option[value]"), function(opt){
+    if (!opt.value) return;
+    var estaBloqueado = bloqueados.indexOf(opt.value) !== -1;
+    opt.disabled = estaBloqueado;
+    var base = opt.textContent.replace(" (no disponible)", "");
+    opt.textContent = estaBloqueado ? base + " (no disponible)" : base;
+  });
+  if (select.value && bloqueados.indexOf(select.value) !== -1) select.value = "";
 }
 
 function backToCalendar(){
@@ -1810,8 +1912,7 @@ function cargarDiasBloqueados(callback){
     .then(function(r){ return r.json(); })
     .then(function(d){
       diasBloqueadosCache = (d && d.dias) ? d.dias : [];
-      DIAS_EXTRA = {};
-      diasBloqueadosCache.forEach(function(dia){ DIAS_EXTRA[dia.fecha] = 1; });
+      aplicarCacheABloqueos();
       if (callback) callback();
     })
     .catch(function(){
