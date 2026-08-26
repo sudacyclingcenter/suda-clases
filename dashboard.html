@@ -418,9 +418,23 @@ html{overscroll-behavior-y:none;background:var(--black)}
       <div class="card-title" style="margin:0">Panel del Coach</div>
       <button onclick="coachLogout()" style="background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">Salir</button>
     </div>
-    <div class="field" style="margin-bottom:0">
-      <label>Ver agenda del día</label>
-      <input type="date" id="coachDatePicker" onchange="loadCoachData()">
+    <div class="field" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <button onclick="coachCalMesAnterior()" style="background:none;border:none;color:var(--orange);font-size:20px;cursor:pointer;padding:0 8px">‹</button>
+        <span style="font-family:'Bebas Neue',cursive;font-size:17px;letter-spacing:1px" id="coachCalMonthTitle"></span>
+        <button onclick="coachCalMesSiguiente()" style="background:none;border:none;color:var(--orange);font-size:20px;cursor:pointer;padding:0 8px">›</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div>
+        <div class="cal-day-name">Mié</div><div class="cal-day-name">Jue</div>
+        <div class="cal-day-name">Vie</div><div class="cal-day-name">Sáb</div>
+        <div class="cal-day-name">Dom</div>
+      </div>
+      <div class="cal-grid" id="coachCalGrid"></div>
+    </div>
+    <div class="field" style="margin-bottom:0;display:none">
+      <label>O escribe la fecha directamente</label>
+      <input type="date" id="coachDatePicker" onchange="onCoachDatePickerChange()">
     </div>
     <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="abrirAgendarCoach()">+ Agendar clase para un alumno</button>
     <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="abrirAlumnosCoach()">👥 Ver alumnos</button>
@@ -987,14 +1001,82 @@ function handleCoachLogin(){
       });
     });
 }
+var coachCalMes = new Date().getMonth();
+var coachCalAnio = new Date().getFullYear();
+
 function abrirPanelCoach(){
   var hoy = new Date();
   var hoyStr = hoy.getFullYear()+"-"+String(hoy.getMonth()+1).padStart(2,"0")+"-"+String(hoy.getDate()).padStart(2,"0");
   document.getElementById("coachDatePicker").value = hoyStr;
+  coachCalMes = hoy.getMonth();
+  coachCalAnio = hoy.getFullYear();
   setScreen("screenCoach");
+  buildCoachCalendar();
   loadCoachData();
   cargarAlumnosCoach();
 }
+
+function buildCoachCalendar(){
+  var MN=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  var titleEl = document.getElementById("coachCalMonthTitle");
+  if (titleEl) titleEl.textContent = MN[coachCalMes] + " " + coachCalAnio;
+
+  var grid = document.getElementById("coachCalGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+
+  var seleccionada = document.getElementById("coachDatePicker").value || "";
+  var hoy = new Date();
+
+  var first = new Date(coachCalAnio, coachCalMes, 1);
+  var startDow = (first.getDay() + 6) % 7;
+  for (var b = 0; b < startDow; b++){
+    var bl = document.createElement("div");
+    bl.className = "cal-day empty";
+    grid.appendChild(bl);
+  }
+
+  var dim = new Date(coachCalAnio, coachCalMes+1, 0).getDate();
+  for (var d = 1; d <= dim; d++){
+    var date = new Date(coachCalAnio, coachCalMes, d);
+    var fechaStr = coachCalAnio+"-"+String(coachCalMes+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    var div = document.createElement("div");
+    div.textContent = d;
+    var cls = "cal-day available";
+    if (date.toDateString() === hoy.toDateString()) cls += " today";
+    if (fechaStr === seleccionada) cls += " selected";
+    div.className = cls;
+    (function(fs){ div.addEventListener("click", function(){ selectCoachCalDate(fs); }); })(fechaStr);
+    grid.appendChild(div);
+  }
+}
+
+function coachCalMesAnterior(){
+  coachCalMes--;
+  if (coachCalMes < 0){ coachCalMes = 11; coachCalAnio--; }
+  buildCoachCalendar();
+}
+function coachCalMesSiguiente(){
+  coachCalMes++;
+  if (coachCalMes > 11){ coachCalMes = 0; coachCalAnio++; }
+  buildCoachCalendar();
+}
+function selectCoachCalDate(fechaStr){
+  document.getElementById("coachDatePicker").value = fechaStr;
+  buildCoachCalendar();
+  loadCoachData();
+}
+function onCoachDatePickerChange(){
+  var v = document.getElementById("coachDatePicker").value;
+  if (v){
+    var p = v.split("-");
+    coachCalAnio = parseInt(p[0]);
+    coachCalMes = parseInt(p[1]) - 1;
+  }
+  buildCoachCalendar();
+  loadCoachData();
+}
+
 function coachLogout(){
   sessionStorage.removeItem("sudaCoachAuth");
   setScreen("screenLogin");
