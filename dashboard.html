@@ -424,6 +424,7 @@ html{overscroll-behavior-y:none;background:var(--black)}
     </div>
     <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="abrirAgendarCoach()">+ Agendar clase para un alumno</button>
     <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="abrirAlumnosCoach()">👥 Ver alumnos</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="abrirDiasBloqueadosCoach()">🚫 Días bloqueados</button>
   </div>
 
   <!-- Totales del mes -->
@@ -458,6 +459,30 @@ html{overscroll-behavior-y:none;background:var(--black)}
   </div>
   <div class="card">
     <div id="alumnosCoachList"></div>
+  </div>
+</div>
+
+<!-- DÍAS BLOQUEADOS (coach) -->
+<div class="screen" id="screenDiasBloqueadosCoach">
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin:0">Días bloqueados</div>
+      <button onclick="setScreen('screenCoach')" style="background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">← Volver</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:12px">Nadie podrá agendar clases en los días que bloquees aquí — sin tocar código.</div>
+    <div class="field" style="text-align:left;margin-bottom:10px">
+      <label>Fecha a bloquear</label>
+      <input type="date" id="diaBloquearFecha" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600">
+    </div>
+    <div class="field" style="text-align:left;margin-bottom:10px">
+      <label>Motivo (opcional)</label>
+      <input type="text" id="diaBloquearMotivo" placeholder="Ej: Vacaciones, evento, etc." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;font-weight:600">
+    </div>
+    <button class="btn btn-primary" onclick="agregarDiaBloqueado()">🚫 Bloquear este día</button>
+  </div>
+  <div class="card">
+    <div class="card-title" style="font-size:16px;margin-bottom:10px">Actualmente bloqueados</div>
+    <div id="diasBloqueadosList"></div>
   </div>
 </div>
 
@@ -857,7 +882,8 @@ var APPS_URL = "https://script.google.com/macros/s/AKfycbyzaGGRg0iZt38QvRh6R967H
 var LANDING  = "https://sudacyclingcenter.github.io/suda-clases";
 
 var FERIADOS = {"05-21":1,"06-20":1,"06-29":1,"07-16":1,"08-15":1,"09-18":1,"09-19":1,"10-12":1,"10-31":1,"11-01":1,"11-15":1,"12-08":1,"12-25":1,"01-01":1,"04-18":1,"04-19":1,"05-01":1};
-var DIAS_EXTRA = {"2026-08-17":1,"2026-10-09":1};
+var DIAS_EXTRA = {}; // se llena dinámicamente desde la planilla al cargar la página
+var diasBloqueadosCache = null; // [{fecha, motivo}, ...] tal como llega del servidor
 var MONTHS_ES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 var DAYS_ES   = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 
@@ -1071,6 +1097,88 @@ function renderAlumnosCoachList(){
       + '<div style="font-size:11px;color:var(--orange);font-weight:800">'+limiteTxt+'</div>'
       + '</div>';
   }).join('');
+}
+
+// ── DÍAS BLOQUEADOS (coach) ───────────────────────────────────────────
+function abrirDiasBloqueadosCoach(){
+  setScreen("screenDiasBloqueadosCoach");
+  document.getElementById("diaBloquearFecha").value = "";
+  document.getElementById("diaBloquearMotivo").value = "";
+  renderDiasBloqueadosList();
+}
+
+function renderDiasBloqueadosList(){
+  var cont = document.getElementById("diasBloqueadosList");
+  if (!diasBloqueadosCache || !diasBloqueadosCache.length){
+    cont.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;font-weight:600">No hay días bloqueados por ahora.</div>';
+    return;
+  }
+  var DN=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  cont.innerHTML = diasBloqueadosCache.map(function(dia){
+    var p = dia.fecha.split("-");
+    var d = new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+    var fechaLeg = DN[d.getDay()]+" "+d.getDate()+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+p[0];
+    return '<div class="suspend-item">'
+      + '<div><div style="font-size:13px;font-weight:700">'+fechaLeg+'</div>'
+      + (dia.motivo ? '<div style="font-size:11px;color:var(--muted)">'+dia.motivo+'</div>' : '')
+      + '</div>'
+      + '<button class="btn-suspend-item" onclick="quitarDiaBloqueado(&quot;'+dia.fecha+'&quot;)">Desbloquear</button>'
+      + '</div>';
+  }).join('');
+}
+
+function agregarDiaBloqueado(){
+  var fecha = document.getElementById("diaBloquearFecha").value;
+  var motivo = document.getElementById("diaBloquearMotivo").value.trim();
+  if (!fecha){ shake("diaBloquearFecha"); return; }
+
+  var yaBloqueado = diasBloqueadosCache && diasBloqueadosCache.some(function(d){ return d.fecha === fecha; });
+  if (yaBloqueado){
+    showAlert("Ese día ya está bloqueado.","warning");
+    return;
+  }
+
+  showLoading("BLOQUEANDO...");
+  var fd = new FormData();
+  fd.append("payload", JSON.stringify({action:"bloquearDia", fecha:fecha, motivo:motivo}));
+  fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
+    .then(function(){
+      hideLoading(function(){
+        diasBloqueadosCache = diasBloqueadosCache || [];
+        diasBloqueadosCache.push({fecha:fecha, motivo:motivo});
+        diasBloqueadosCache.sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; });
+        DIAS_EXTRA[fecha] = 1;
+        document.getElementById("diaBloquearFecha").value = "";
+        document.getElementById("diaBloquearMotivo").value = "";
+        renderDiasBloqueadosList();
+        buildCalendar();
+        showAlert("Día bloqueado.","warning");
+      });
+    })
+    .catch(function(){
+      hideLoading(function(){ showAlert("No se pudo bloquear el día. Intenta de nuevo.","error"); });
+    });
+}
+
+function quitarDiaBloqueado(fecha){
+  showConfirmModal("¿Desbloquear el "+fecha+" para que se pueda volver a agendar?", function(){
+    showLoading("DESBLOQUEANDO...");
+    var fd = new FormData();
+    fd.append("payload", JSON.stringify({action:"desbloquearDia", fecha:fecha}));
+    fetch(APPS_URL, {method:"POST", body:fd, mode:"no-cors"})
+      .then(function(){
+        hideLoading(function(){
+          diasBloqueadosCache = (diasBloqueadosCache||[]).filter(function(d){ return d.fecha !== fecha; });
+          delete DIAS_EXTRA[fecha];
+          renderDiasBloqueadosList();
+          buildCalendar();
+          showAlert("Día desbloqueado.","warning");
+        });
+      })
+      .catch(function(){
+        hideLoading(function(){ showAlert("No se pudo desbloquear. Intenta de nuevo.","error"); });
+      });
+  });
 }
 
 // ── AGENDAR (coach, para un alumno) ──────────────────────────────────
@@ -1615,8 +1723,25 @@ function showAlert(msg,type){
 }
 function shake(id){var el=document.getElementById(id);if(!el)return;el.style.borderColor="var(--orange)";el.style.animation="shakeX .4s ease";setTimeout(function(){el.style.borderColor="";el.style.animation="";},500);}
 
+function cargarDiasBloqueados(callback){
+  fetch(APPS_URL + "?action=getDiasBloqueados")
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      diasBloqueadosCache = (d && d.dias) ? d.dias : [];
+      DIAS_EXTRA = {};
+      diasBloqueadosCache.forEach(function(dia){ DIAS_EXTRA[dia.fecha] = 1; });
+      if (callback) callback();
+    })
+    .catch(function(){
+      diasBloqueadosCache = [];
+      if (callback) callback();
+    });
+}
+
 window.addEventListener("load",function(){
-  buildCalendar();
+  cargarDiasBloqueados(function(){
+    buildCalendar();
+  });
   if (sessionStorage.getItem("sudaCoachAuth") === "1") {
     abrirPanelCoach();
   }
